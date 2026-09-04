@@ -1,0 +1,55 @@
+name: Windows portable release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-portable:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run logic and integrity tests
+        run: npm test
+      - name: Run syntax checks
+        run: npm run check
+      - name: Run Electron end-to-end smoke test
+        run: npm run test:electron
+      - name: Build portable executable
+        run: npm run dist:win
+      - name: Generate SHA-256 checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem dist -Filter *.exe | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
+            "$hash  $($_.Name)" | Add-Content -Encoding utf8 dist/SHA256SUMS.txt
+          }
+      - name: Upload verified build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lut-analysis-toolbox-windows-portable
+          path: |
+            dist/*.exe
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" dist/*.exe dist/SHA256SUMS.txt --verify-tag --title "LUT分析工具箱 ${{ github.ref_name }}" --notes "Windows x64 便携版。无需安装；下载 EXE 后直接运行。包含 LUT 解析、检查、3D 分析、预览、重采样及导出功能。"

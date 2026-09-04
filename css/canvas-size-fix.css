@@ -1,0 +1,48 @@
+/* Keep analysis canvases readable instead of stretching every result to the full content width. */
+#lutviz-canvas {
+  display: block;
+  width: 100%;
+  height: clamp(260px, 32vw, 360px);
+  max-width: 100%;
+}
+
+#granger-canvas {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  margin: 1rem auto 0;
+  aspect-ratio: 2 / 1;
+}
+
+#hue-canvas,
+#heatmap-canvas {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  margin-inline: auto;
+}
+
+#hue-canvas {
+  aspect-ratio: 5 / 1;
+}
+
+#heatmap-canvas {
+  aspect-ratio: 18 / 5;
+}
+
+#vectorscope-canvas {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin-inline: auto;
+  aspect-ratio: 1 / 1;
+}
+
+@media (max-width: 768px) {
+  #lutviz-canvas {
+    height: clamp(220px, 55vw, 320px);
+  }
+}

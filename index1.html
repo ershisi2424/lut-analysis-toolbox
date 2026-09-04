@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <title>LUT分析工具箱</title>
+    <meta name="description" content="LUT 检查器，实时波形分析、Granger 彩虹测试、质量评分">
+    <meta name="keywords" content="LUT检查,波形分析,彩虹测试,质量评分">
+
+    <link rel="preload" href="css/style.min.css?v=20260806" as="style">
+    <link rel="preload" href="css/canvas-size-fix.css?v=20260904-1" as="style">
+    <link rel="stylesheet" href="css/style.min.css?v=20260806">
+    <link rel="stylesheet" href="css/canvas-size-fix.css?v=20260904-1">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234ade80' width='100' height='100' rx='20'/><text y='.7em' font-size='60' fill='black' text-anchor='middle'>L</text></svg>">
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        /* P0 同步首页 NOTHIN' 设计系统：覆盖式变量 + 极简导航 + 色调对齐 */
+        :root {
+            --color-bg: #050505;
+            --color-bg-card: #0a0a0a;
+            --color-bg-section: #141414;
+            --color-text-primary: #f5f5f5;
+            --color-text-secondary: #d0d0d0;
+            --color-text-muted: #8a8a8a;
+            --color-accent: #f5f5f5;
+            --color-border: #262626;
+            --color-border-light: #1a1a1a;
+            --font-body: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+            --font-display: "Bebas Neue", "Inter Tight", "Noto Sans SC", Impact, sans-serif;
+            --font-mono: "SF Mono", "Fira Code", "Noto Sans SC", monospace;
+        }
+        body { background: #050505; color: #f5f5f5; font-family: var(--font-body); }
+        body > .wrapper { padding-top: 64px; }
+
+        /* 隐藏 loading-overlay（与首页一致） */
+        .loading-overlay { display: none !important; }
+
+        /* 首页同款极简导航 */
+        .yx-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(38, 38, 38, 0.5);
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .yx-nav-brand {
+            font-size: 18px; font-weight: 500; letter-spacing: -0.01em;
+            color: #f5f5f5; text-decoration: none;
+        }
+        .yx-nav-links { display: flex; align-items: center; gap: 32px; }
+        .yx-nav-links a {
+            font-size: 14px; color: #8a8a8a; text-decoration: none;
+            transition: color 0.2s;
+        }
+        .yx-nav-links a:hover,
+        .yx-nav-links a[aria-current="page"] { color: #f5f5f5; }
+        .yx-nav-toggle { display: none; }
+
+        /* 隐藏旧 Neve 导航残留（如有） */
+        .header--row, .nv-navbar, .header--row-inner { display: none !important; }
+
+        /* 去掉绿色装饰使用 */
+        .logo, .nv-html-content a { color: #f5f5f5 !important; text-decoration: none; }
+
+        /* 旧版水印与首页风格不符，弱化 */
+        .copyright-watermark, .copyright-footer { color: #8a8a8a; border-color: #262626; }
+
+        @media (max-width: 768px) {
+            .yx-nav-links { display: none; }
+            .yx-nav-toggle {
+                display: inline-flex; align-items: center; justify-content: center;
+                width: 32px; height: 32px; color: #f5f5f5; background: none; border: none; cursor: pointer;
+            }
+            .yx-nav-toggle svg { width: 20px; height: 20px; }
+        }
+
+        /* Password Auth Overlay */
+        #auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: #050505;
+            z-index: 2147483647;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        #auth-overlay .auth-box {
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+        #auth-overlay .auth-lock {
+            color: #f5f5f5;
+            margin-bottom: 32px;
+            display: inline-flex;
+        }
+        #auth-overlay .auth-title {
+            font-family: "Bebas Neue", "Inter Tight", "Noto Sans SC", Impact, sans-serif;
+            font-size: 28px;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            color: #f5f5f5;
+            margin: 0 0 8px;
+        }
+        #auth-overlay .auth-subtitle {
+            font-family: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+            font-size: 13px;
+            color: #8a8a8a;
+            margin: 0 0 40px;
+            letter-spacing: 0.02em;
+        }
+        #auth-overlay .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        #auth-overlay .auth-input {
+            width: 100%;
+            background: #0a0a0a;
+            border: 1px solid #262626;
+            border-radius: 6px;
+            color: #f5f5f5;
+            font-family: "SF Mono", "Fira Code", "Noto Sans SC", monospace;
+            font-size: 14px;
+            padding: 12px 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+        }
+        #auth-overlay .auth-input::placeholder {
+            color: #555;
+        }
+        #auth-overlay .auth-input:focus {
+            border-color: #f5f5f5;
+        }
+        #auth-overlay .auth-submit {
+            width: 100%;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 6px;
+            color: #050505;
+            font-family: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 12px;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            transition: opacity 0.2s ease;
+        }
+        #auth-overlay .auth-submit:hover {
+            opacity: 0.85;
+        }
+        #auth-overlay .auth-submit.loading {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #auth-overlay .auth-error {
+            font-family: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+            font-size: 12px;
+            color: #8a8a8a;
+            margin: 12px 0 0;
+            min-height: 0;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        #auth-overlay .auth-error.show {
+            opacity: 1;
+            color: #cfcfcf;
+        }
+        #auth-overlay .auth-footer {
+            font-family: "SF Mono", "Fira Code", "Noto Sans SC", monospace;
+            font-size: 10px;
+            color: #333;
+            letter-spacing: 0.3em;
+            margin: 40px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <nav class="yx-nav" aria-label="主导航">
+            <a href="index.html" class="yx-nav-brand">LUT分析工具箱</a>
+            <div class="yx-nav-links">
+                <a href="index1.html" aria-current="page">检查器</a>
+                <a href="index2.html">分析器</a>
+                <a href="index3.html">预览器</a>
+            </div>
+            <button class="yx-nav-toggle" aria-label="菜单" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+        </nav>
+
+        <main id="content" class="neve-main">
+            <div class="container single-page-container">
+                <div class="row">
+                    <div class="nv-single-page-wrap col">
+                        <div class="nv-content-wrap entry-content">
+                            <h1 class="wp-block-heading has-text-align-center">LUT 检查器</h1>
+
+                            <div id="lutviz" class="lutviz-card" role="region" aria-label="LUT 可视化工具">
+                                <div class="drop-zone" id="drop-zone" aria-label="拖拽 LUT 文件到此处或点击选择">
+                                    <input type="file" id="lutviz-file" accept=".cube,.png" class="drop-zone-input" aria-label="选择 LUT 文件">
+                                    <div class="drop-zone-content">
+                                        <div class="drop-zone-text">选择 LUT (.cube / .png)</div>
+                                        <div class="drop-zone-hint">或拖拽文件到此处</div>
+                                    </div>
+                                </div>
+                                <div id="lutviz-name" class="lutviz-name" aria-live="polite"></div>
+                                <div class="lutviz-legend" id="lutviz-legend">
+                                    <button class="legend-btn active" data-channel="y" type="button"><i class="chip chip-y"></i> Y</button>
+                                    <button class="legend-btn active" data-channel="r" type="button"><i class="chip chip-r"></i> R</button>
+                                    <button class="legend-btn active" data-channel="g" type="button"><i class="chip chip-g"></i> G</button>
+                                    <button class="legend-btn active" data-channel="b" type="button"><i class="chip chip-b"></i> B</button>
+                                </div>
+
+                                <canvas id="lutviz-canvas" class="lutviz-canvas" aria-label="LUT 波形图" width="1226" height="473"></canvas>
+
+                                <canvas id="granger-canvas" aria-label="Granger 彩虹测试图像（点击或拖动分割线查看对比）" width="1224" height="612"></canvas>
+                            </div>
+
+                            <div id="lut-analysis" class="lut-analysis-card" role="region" aria-label="滤镜分析结果">
+                                <h2 class="analysis-title">分析结果</h2>
+                                <div class="analysis-grid">
+                                    <div class="analysis-section">
+                                        <h3 class="analysis-subtitle">文件信息</h3>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">尺寸:</span>
+                                            <span id="lut-info-size" class="analysis-value">-</span>
+                                        </div>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">条目数:</span>
+                                            <span id="lut-info-entries" class="analysis-value">-</span>
+                                        </div>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">文件大小:</span>
+                                            <span id="lut-info-filesize" class="analysis-value">-</span>
+                                        </div>
+                                    </div>
+                                    <div class="analysis-section">
+                                        <h3 class="analysis-subtitle">通道分析</h3>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">亮度峰值:</span>
+                                            <span id="lut-y-peak" class="analysis-value">-</span>
+                                        </div>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">亮度最小值:</span>
+                                            <span id="lut-y-min" class="analysis-value">-</span>
+                                        </div>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">红色通道峰值:</span>
+                                            <span id="lut-r-peak" class="analysis-value">-</span>
+                                        </div>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">绿色通道峰值:</span>
+                                            <span id="lut-g-peak" class="analysis-value">-</span>
+                                        </div>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">蓝色通道峰值:</span>
+                                            <span id="lut-b-peak" class="analysis-value">-</span>
+                                        </div>
+                                    </div>
+                                    <div class="analysis-section">
+                                        <h3 class="analysis-subtitle">对比度分析</h3>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">平均对比度变化:</span>
+                                            <span id="lut-contrast" class="analysis-value">-</span>
+                                        </div>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">最大亮度:</span>
+                                            <span id="lut-max-lum" class="analysis-value">-</span>
+                                        </div>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">最小亮度:</span>
+                                            <span id="lut-min-lum" class="analysis-value">-</span>
+                                        </div>
+                                    </div>
+                                    <div class="analysis-section">
+                                        <h3 class="analysis-subtitle">饱和度分析</h3>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">平均饱和度变化:</span>
+                                            <span id="lut-saturation" class="analysis-value">-</span>
+                                        </div>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">饱和度增强:</span>
+                                            <span id="lut-sat-boost" class="analysis-value">-</span>
+                                        </div>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">饱和度降低:</span>
+                                            <span id="lut-sat-reduce" class="analysis-value">-</span>
+                                        </div>
+                                    </div>
+                                    <div class="analysis-section">
+                                        <h3 class="analysis-subtitle">动态范围</h3>
+                                        <div class="analysis-item">
+                                            <span class="analysis-label">动态范围:</span>
+                                            <span id="lut-dynamic-range" class="analysis-value">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="quality-score" class="quality-score-card" role="region" aria-label="质量评分">
+                                <div class="score-circle-container">
+                                    <div class="score-ring-bg"></div>
+                                    <div id="quality-score-ring" class="score-ring"></div>
+                                    <div class="score-inner">
+                                        <span id="quality-score-value" class="score-value">-</span>
+                                        <span id="quality-rating" class="score-rating">-</span>
+                                    </div>
+                                </div>
+                                <div class="quality-metrics">
+                                    <div class="quality-item">
+                                        <span class="quality-label">sRGB 色域</span>
+                                        <span id="quality-srgb" class="quality-value">-</span>
+                                    </div>
+                                    <div class="quality-item">
+                                        <span class="quality-label">黑色提升</span>
+                                        <span id="quality-black-lift" class="quality-value">-</span>
+                                    </div>
+                                    <div class="quality-item">
+                                        <span class="quality-label">白色下降</span>
+                                        <span id="quality-white-drop" class="quality-value">-</span>
+                                    </div>
+                                    <div class="quality-item">
+                                        <span class="quality-label">中性色偏</span>
+                                        <span id="quality-cast" class="quality-value">-</span>
+                                    </div>
+                                    <div class="quality-item">
+                                        <span class="quality-label">最大步长比</span>
+                                        <span id="quality-step" class="quality-value">-</span>
+                                    </div>
+                                    <div class="quality-item">
+                                        <span class="quality-label">恒等条目</span>
+                                        <span id="quality-identity" class="quality-value">-</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="hue-linearity" class="analysis-card" role="region" aria-label="色相线性分析">
+                                <h2 class="analysis-title">色相线性</h2>
+                                <canvas id="hue-canvas" class="analysis-canvas" width="800" height="200"></canvas>
+                                <div class="hue-stats">
+                                    <span class="hue-stat">最大偏移: <span id="hue-max-shift">-</span>°</span>
+                                    <span class="hue-stat">平均偏移: <span id="hue-avg-shift">-</span>°</span>
+                                </div>
+                            </div>
+
+                            <div id="saturation-heatmap" class="analysis-card" role="region" aria-label="饱和度热力图">
+                                <h2 class="analysis-title">饱和度比率热力图</h2>
+                                <canvas id="heatmap-canvas" class="analysis-canvas" width="720" height="200"></canvas>
+                            </div>
+
+                            <div id="vectorscope" class="analysis-card" role="region" aria-label="矢量示波器">
+                                <h2 class="analysis-title">饱和度响应</h2>
+                                <canvas id="vectorscope-canvas" class="analysis-canvas" width="400" height="400"></canvas>
+                            </div>
+
+                            <div style="height:60px" aria-hidden="true" class="wp-block-spacer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <button tabindex="0" id="scroll-to-top" class="scroll-to-top scroll-to-top-right icon" aria-label="返回顶部">
+            <svg class="scroll-to-top-icon" aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15">
+                <rect width="15" height="15" fill="none"></rect>
+                <path fill="currentColor" d="M2,8.48l-.65-.65a.71.71,0,0,1,0-1L7,1.14a.72.72,0,0,1,1,0l5.69,5.7a.71.71,0,0,1,0,1L13,8.48a.71.71,0,0,1-1,0L8.67,4.94v8.42a.7.7,0,0,1-.7.7H7a.7.7,0,0,1-.7-.7V4.94L3,8.47a.7.7,0,0,1-1,0Z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <script src="js/lut-utils.js?v=20260904-4"></script>
+    <script src="js/utils.min.js?v=20260806"></script>
+    <script src="js/lutviz.min.js?v=20260904-3"></script>
+    <script src="js/granger.min.js?v=20260904-3"></script>
+    <script src="js/bug-detect.min.js?v=20260806"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const scrollToTopBtn = document.getElementById('scroll-to-top');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    scrollToTopBtn.style.display = 'flex';
+                    scrollToTopBtn.style.opacity = '1';
+                    scrollToTopBtn.style.visibility = 'visible';
+                } else {
+                    scrollToTopBtn.style.opacity = '0';
+                    scrollToTopBtn.style.visibility = 'hidden';
+                }
+            });
+            scrollToTopBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    </script>
+
+    <div class="copyright-watermark">LUT分析工具箱</div>
+    <div class="copyright-footer">LUT分析工具箱 参考网页https://mononodes.com/lut-inspector/</div>
+
+    <script src="js/sw-register.js?v=20260904-5"></script>
+    <script src="js/auth.js?v=20260904-5"></script>
+</body>
+</html>

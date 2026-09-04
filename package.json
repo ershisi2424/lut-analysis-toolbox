@@ -1,0 +1,53 @@
+{
+  "name": "lut-analysis-toolbox",
+  "version": "1.0.0",
+  "description": "LUT分析工具箱 - 本地 3D LUT 检查、分析、预览与转换工具",
+  "main": "electron/main.js",
+  "author": "ershisi2424",
+  "license": "UNLICENSED",
+  "private": false,
+  "scripts": {
+    "start": "electron .",
+    "test": "node tests/lut-utils.test.js && node tests/project-integrity.test.js",
+    "test:electron": "electron tests/electron-smoke.js",
+    "check": "node --check electron/main.js && node --check electron/navigation.js && node --check js/lut-utils.js && node --check js/auth.js && node --check sw.js",
+    "dist:win": "electron-builder --win portable --x64"
+  },
+  "devDependencies": {
+    "electron": "44.2.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "cn.lut.analysis.toolbox",
+    "productName": "LUT分析工具箱",
+    "artifactName": "LUT分析工具箱-${version}-portable.${ext}",
+    "asar": true,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "index*.html",
+      "manifest.json",
+      "sw.js",
+      "css/**/*",
+      "js/**/*",
+      "assets/**/*",
+      "vendor/**/*",
+      "!**/*.DS_Store"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "portable": {
+      "artifactName": "LUT分析工具箱-${version}-portable.${ext}"
+    }
+  }
+}

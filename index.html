@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUT分析工具箱 - 专业 LUT 分析工具</title>
+    <meta name="description" content="LUT分析工具箱，专业级在线 LUT 分析工具，支持检查、分析和预览 3D .cube 文件，提供波形图、彩虹测试、通道分析等功能。">
+    <meta name="keywords" content="LUT分析,cube文件,色彩查找表,调色工具">
+    <meta name="author" content="LUT分析工具箱">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234ade80' width='100' height='100' rx='20'/><text y='.7em' font-size='60' fill='black' text-anchor='middle'>L</text></svg>">
+    <link rel="manifest" href="/manifest.json">
+    <style id="theme-vars">
+/* =====================================================
+   LUT分析工具箱 · NOTHIN' 风格设计系统
+   黑白极简 / 单品牌色 / 低饱和强调
+   ===================================================== */
+
+:root {
+  /* Brand Primary — 在黑白基调上以纯白作为主要动作色 */
+  --yx-primary: #f5f5f5;
+  --yx-primary-foreground: #050505;
+
+  /* Surfaces */
+  --yx-background: #050505;
+  --yx-foreground: #f5f5f5;
+  --yx-card: #0a0a0a;
+  --yx-card-foreground: #f5f5f5;
+  --yx-popover: #0a0a0a;
+  --yx-popover-foreground: #f5f5f5;
+
+  /* Muted / Secondary — 同中性轴，避免引入第二品牌色 */
+  --yx-muted: #141414;
+  --yx-muted-foreground: #8a8a8a;
+  --yx-secondary: #1a1a1a;
+  --yx-secondary-foreground: #d0d0d0;
+  --yx-accent: #1a1a1a;
+  --yx-accent-foreground: #f5f5f5;
+
+  /* Lines */
+  --yx-border: #262626;
+  --yx-input: #1a1a1a;
+  --yx-ring: #f5f5f5;
+
+  /* Radius */
+  --yx-radius-sm: 4px;
+  --yx-radius-md: 8px;
+  --yx-radius-lg: 16px;
+
+  /* Semantic state colors — 仅用于状态/验证/破坏性动作 */
+  --yx-state-success: #a3a3a3;
+  --yx-state-warning: #b8b8b8;
+  --yx-state-error: #cfcfcf;
+  --yx-state-info: #a0a0a0;
+
+  /* Typography */
+  --yx-font-sans: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --yx-font-display: "Bebas Neue", "Inter Tight", "Noto Sans SC", Impact, sans-serif;
+  --yx-font-mono: "SF Mono", "Fira Code", "Noto Sans SC", monospace;
+
+  /* Spacing scale (8pt) */
+  --yx-space-1: 4px;
+  --yx-space-2: 8px;
+  --yx-space-3: 12px;
+  --yx-space-4: 16px;
+  --yx-space-5: 24px;
+  --yx-space-6: 32px;
+  --yx-space-7: 48px;
+  --yx-space-8: 80px;
+  --yx-space-9: 120px;
+
+  /* Shadow — 仅用于真实浮层 */
+  --yx-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 1px rgba(0, 0, 0, 0.15);
+  --yx-shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  --yx-shadow-3: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+}
+
+/* Reduced motion baseline */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+    </style>
+    <script src="vendor/tailwind/index.global.js"></script>
+    <script src="vendor/lucide/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--yx-background);
+    --color-foreground: var(--yx-foreground);
+    --color-card: var(--yx-card);
+    --color-card-foreground: var(--yx-card-foreground);
+    --color-popover: var(--yx-popover);
+    --color-popover-foreground: var(--yx-popover-foreground);
+    --color-primary: var(--yx-primary);
+    --color-primary-foreground: var(--yx-primary-foreground);
+    --color-secondary: var(--yx-secondary);
+    --color-secondary-foreground: var(--yx-secondary-foreground);
+    --color-muted: var(--yx-muted);
+    --color-muted-foreground: var(--yx-muted-foreground);
+    --color-accent: var(--yx-accent);
+    --color-accent-foreground: var(--yx-accent-foreground);
+    --color-border: var(--yx-border);
+    --color-input: var(--yx-input);
+    --color-ring: var(--yx-ring);
+    --radius-sm: var(--yx-radius-sm);
+    --radius-md: var(--yx-radius-md);
+    --radius-lg: var(--yx-radius-lg);
+  }
+  @layer base {
+    body { background: var(--yx-background); color: var(--yx-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--yx-background); }
+      .text-background { color: var(--yx-background); }
+      .border-background { border-color: var(--yx-background); }
+      .ring-background { --tw-ring-color: var(--yx-background); }
+      .bg-foreground { background-color: var(--yx-foreground); }
+      .text-foreground { color: var(--yx-foreground); }
+      .border-foreground { border-color: var(--yx-foreground); }
+      .ring-foreground { --tw-ring-color: var(--yx-foreground); }
+      .bg-card { background-color: var(--yx-card); }
+      .text-card { color: var(--yx-card); }
+      .border-card { border-color: var(--yx-card); }
+      .ring-card { --tw-ring-color: var(--yx-card); }
+      .bg-card-foreground { background-color: var(--yx-card-foreground); }
+      .text-card-foreground { color: var(--yx-card-foreground); }
+      .border-card-foreground { border-color: var(--yx-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--yx-card-foreground); }
+      .bg-popover { background-color: var(--yx-popover); }
+      .text-popover { color: var(--yx-popover); }
+      .border-popover { border-color: var(--yx-popover); }
+      .ring-popover { --tw-ring-color: var(--yx-popover); }
+      .bg-popover-foreground { background-color: var(--yx-popover-foreground); }
+      .text-popover-foreground { color: var(--yx-popover-foreground); }
+      .border-popover-foreground { border-color: var(--yx-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--yx-popover-foreground); }
+      .bg-primary { background-color: var(--yx-primary); }
+      .text-primary { color: var(--yx-primary); }
+      .border-primary { border-color: var(--yx-primary); }
+      .ring-primary { --tw-ring-color: var(--yx-primary); }
+      .bg-primary-foreground { background-color: var(--yx-primary-foreground); }
+      .text-primary-foreground { color: var(--yx-primary-foreground); }
+      .border-primary-foreground { border-color: var(--yx-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--yx-primary-foreground); }
+      .bg-secondary { background-color: var(--yx-secondary); }
+      .text-secondary { color: var(--yx-secondary); }
+      .border-secondary { border-color: var(--yx-secondary); }
+      .ring-secondary { --tw-ring-color: var(--yx-secondary); }
+      .bg-secondary-foreground { background-color: var(--yx-secondary-foreground); }
+      .text-secondary-foreground { color: var(--yx-secondary-foreground); }
+      .border-secondary-foreground { border-color: var(--yx-secondary-foreground); }
+      .ring-secondary-foreground { --tw-ring-color: var(--yx-secondary-foreground); }
+      .bg-muted { background-color: var(--yx-muted); }
+      .text-muted { color: var(--yx-muted); }
+      .border-muted { border-color: var(--yx-muted); }
+      .ring-muted { --tw-ring-color: var(--yx-muted); }
+      .bg-muted-foreground { background-color: var(--yx-muted-foreground); }
+      .text-muted-foreground { color: var(--yx-muted-foreground); }
+      .border-muted-foreground { border-color: var(--yx-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--yx-muted-foreground); }
+      .bg-accent { background-color: var(--yx-accent); }
+      .text-accent { color: var(--yx-accent); }
+      .border-accent { border-color: var(--yx-accent); }
+      .ring-accent { --tw-ring-color: var(--yx-accent); }
+      .bg-accent-foreground { background-color: var(--yx-accent-foreground); }
+      .text-accent-foreground { color: var(--yx-accent-foreground); }
+      .border-accent-foreground { border-color: var(--yx-accent-foreground); }
+      .ring-accent-foreground { --tw-ring-color: var(--yx-accent-foreground); }
+      .bg-border { background-color: var(--yx-border); }
+      .text-border { color: var(--yx-border); }
+      .border-border { border-color: var(--yx-border); }
+      .ring-border { --tw-ring-color: var(--yx-border); }
+      .bg-input { background-color: var(--yx-input); }
+      .text-input { color: var(--yx-input); }
+      .border-input { border-color: var(--yx-input); }
+      .ring-input { --tw-ring-color: var(--yx-input); }
+      .bg-ring { background-color: var(--yx-ring); }
+      .text-ring { color: var(--yx-ring); }
+      .border-ring { border-color: var(--yx-ring); }
+      .ring-ring { --tw-ring-color: var(--yx-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+
+      /* Password Auth Overlay */
+      #auth-overlay {
+        position: fixed;
+        inset: 0;
+        background: #050505;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      #auth-overlay .auth-box {
+        width: 100%;
+        max-width: 360px;
+        text-align: center;
+      }
+      #auth-overlay .auth-lock {
+        color: #f5f5f5;
+        margin-bottom: 32px;
+        display: inline-flex;
+      }
+      #auth-overlay .auth-title {
+        font-family: var(--yx-font-display);
+        font-size: 28px;
+        font-weight: 400;
+        letter-spacing: 0.08em;
+        color: #f5f5f5;
+        margin: 0 0 8px;
+      }
+      #auth-overlay .auth-subtitle {
+        font-family: var(--yx-font-sans);
+        font-size: 13px;
+        color: #8a8a8a;
+        margin: 0 0 40px;
+        letter-spacing: 0.02em;
+      }
+      #auth-overlay .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      #auth-overlay .auth-input {
+        width: 100%;
+        background: #0a0a0a;
+        border: 1px solid #262626;
+        border-radius: 6px;
+        color: #f5f5f5;
+        font-family: var(--yx-font-mono);
+        font-size: 14px;
+        padding: 12px 14px;
+        outline: none;
+        transition: border-color 0.2s ease;
+        box-sizing: border-box;
+      }
+      #auth-overlay .auth-input::placeholder {
+        color: #555;
+      }
+      #auth-overlay .auth-input:focus {
+        border-color: #f5f5f5;
+      }
+      #auth-overlay .auth-submit {
+        width: 100%;
+        background: #f5f5f5;
+        border: none;
+        border-radius: 6px;
+        color: #050505;
+        font-family: var(--yx-font-sans);
+        font-size: 13px;
+        font-weight: 500;
+        padding: 12px;
+        cursor: pointer;
+        letter-spacing: 0.05em;
+        transition: opacity 0.2s ease;
+      }
+      #auth-overlay .auth-submit:hover {
+        opacity: 0.85;
+      }
+      #auth-overlay .auth-submit.loading {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      #auth-overlay .auth-error {
+        font-family: var(--yx-font-sans);
+        font-size: 12px;
+        color: #8a8a8a;
+        margin: 12px 0 0;
+        min-height: 0;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      #auth-overlay .auth-error.show {
+        opacity: 1;
+        color: #cfcfcf;
+      }
+      #auth-overlay .auth-footer {
+        font-family: var(--yx-font-mono);
+        font-size: 10px;
+        color: #333;
+        letter-spacing: 0.3em;
+        margin: 40px 0 0;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main>
+        <!-- Navigation -->
+        <nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 md:px-10 border-b border-border/50 bg-background/80 backdrop-blur-md">
+            <a href="#" class="text-lg font-medium tracking-tight text-foreground">LUT分析工具箱</a>
+            <div class="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+                <a href="index1.html" class="hover:text-foreground transition-colors">检查器</a>
+                <a href="index2.html" class="hover:text-foreground transition-colors">分析器</a>
+                <a href="index3.html" class="hover:text-foreground transition-colors">预览器</a>
+            </div>
+            <button class="md:hidden text-foreground" aria-label="菜单">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+        </nav>
+
+        <!-- Hero -->
+        <section id="hero" class="relative min-h-screen flex items-center justify-center bg-background" style="opacity:1;visibility:visible;display:flex;min-height:100vh;overflow:hidden;">
+            <canvas id="hero-canvas" class="absolute inset-0 w-full h-full opacity-60"></canvas>
+            <div id="hero-fallback" class="absolute inset-0 w-full h-full bg-cover bg-center opacity-40" style="background-image: url('assets/hero-lut-atmosphere.jpg'); display: none;"></div>
+            <div id="hero-content" class="relative z-10 max-w-5xl px-6 md:px-10 text-center transition-transform duration-200 ease-out">
+                <p class="text-xs md:text-sm uppercase tracking-[0.3em] text-muted-foreground mb-6">Professional LUT Analysis</p>
+                <h1 class="text-5xl md:text-7xl lg:text-9xl font-display font-bold leading-none tracking-tighter text-foreground mb-8">
+                    LUT<br><span class="text-muted-foreground">分析工具箱</span>
+                </h1>
+                <p class="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+                    专业级在线工具，用于检查、分析和预览 3D LUT 文件
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a id="start-using-link" href="index1.html" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-foreground text-primary-foreground text-sm font-medium rounded-md hover:bg-muted-foreground transition-colors">
+                        开始使用 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                    <a href="#tools" class="inline-flex items-center justify-center gap-2 px-6 py-3 border border-border text-foreground text-sm font-medium rounded-md hover:bg-muted transition-colors">
+                        了解工具
+                    </a>
+                </div>
+            </div>
+            <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-muted-foreground">
+                <i data-lucide="chevron-down" class="w-6 h-6 animate-bounce"></i>
+            </div>
+        </section>
+
+        <!-- Tools -->
+        <section id="tools" class="py-24 md:py-40 bg-background border-t border-border">
+            <div class="max-w-6xl mx-auto px-6 md:px-10">
+                <div class="mb-16 md:mb-24">
+                    <p class="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-4 reveal-text">Toolbox</p>
+                    <h2 class="text-4xl md:text-6xl font-display font-bold tracking-tight text-foreground reveal-text">工具套件</h2>
+                </div>
+                <div class="space-y-1">
+                    <a href="index1.html" class="group block py-8 md:py-12 border-b border-border reveal-item">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="flex items-start gap-6 md:gap-12">
+                                <span class="text-sm text-muted-foreground font-mono pt-2">01</span>
+                                <div>
+                                    <h3 class="text-2xl md:text-4xl font-medium text-foreground group-hover:text-muted-foreground transition-colors">检查器</h3>
+                                    <p class="text-muted-foreground mt-2 max-w-md">实时波形分析、Granger 彩虹测试、质量评分</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 text-muted-foreground">
+                                <span class="hidden md:block text-sm">进入工具</span>
+                                <i data-lucide="arrow-up-right" class="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="index2.html" class="group block py-8 md:py-12 border-b border-border reveal-item">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="flex items-start gap-6 md:gap-12">
+                                <span class="text-sm text-muted-foreground font-mono pt-2">02</span>
+                                <div>
+                                    <h3 class="text-2xl md:text-4xl font-medium text-foreground group-hover:text-muted-foreground transition-colors">分析器</h3>
+                                    <p class="text-muted-foreground mt-2 max-w-md">详细通道分析、色相线性、饱和度热力图</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 text-muted-foreground">
+                                <span class="hidden md:block text-sm">进入工具</span>
+                                <i data-lucide="arrow-up-right" class="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="index3.html" class="group block py-8 md:py-12 border-b border-border reveal-item">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="flex items-start gap-6 md:gap-12">
+                                <span class="text-sm text-muted-foreground font-mono pt-2">03</span>
+                                <div>
+                                    <h3 class="text-2xl md:text-4xl font-medium text-foreground group-hover:text-muted-foreground transition-colors">预览器</h3>
+                                    <p class="text-muted-foreground mt-2 max-w-md">效果预览、尺寸重采样、批量转换导出</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 text-muted-foreground">
+                                <span class="hidden md:block text-sm">进入工具</span>
+                                <i data-lucide="arrow-up-right" class="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section id="features" class="py-24 md:py-40 bg-background">
+            <div class="max-w-6xl mx-auto px-6 md:px-10">
+                <div class="mb-16 md:mb-24">
+                    <p class="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-4 reveal-text">Capabilities</p>
+                    <h2 class="text-4xl md:text-6xl font-display font-bold tracking-tight text-foreground reveal-text">核心功能</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-px bg-border border border-border">
+                    <div class="bg-background p-8 md:p-12 reveal-item">
+                        <div class="text-4xl font-mono text-muted-foreground mb-6">01</div>
+                        <h3 class="text-xl md:text-2xl font-medium text-foreground mb-3">实时可视化</h3>
+                        <p class="text-muted-foreground leading-relaxed">上传 LUT 文件后即时显示 RGB 曲线、波形图和色彩变换效果，无需等待</p>
+                    </div>
+                    <div class="bg-background p-8 md:p-12 reveal-item">
+                        <div class="text-4xl font-mono text-muted-foreground mb-6">02</div>
+                        <h3 class="text-xl md:text-2xl font-medium text-foreground mb-3">专业分析</h3>
+                        <p class="text-muted-foreground leading-relaxed">基于 Rec. 709 标准计算亮度、对比度、饱和度，提供精确的质量评分</p>
+                    </div>
+                    <div class="bg-background p-8 md:p-12 reveal-item">
+                        <div class="text-4xl font-mono text-muted-foreground mb-6">03</div>
+                        <h3 class="text-xl md:text-2xl font-medium text-foreground mb-3">多格式支持</h3>
+                        <p class="text-muted-foreground leading-relaxed">支持 .cube 文件和 HaldCLUT PNG 格式，自动识别不同规格的 LUT 文件</p>
+                    </div>
+                    <div class="bg-background p-8 md:p-12 reveal-item">
+                        <div class="text-4xl font-mono text-muted-foreground mb-6">04</div>
+                        <h3 class="text-xl md:text-2xl font-medium text-foreground mb-3">离线可用</h3>
+                        <p class="text-muted-foreground leading-relaxed">采用 Service Worker 技术，页面可离线使用，所有计算在浏览器端完成</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage -->
+        <section id="usage" class="py-24 md:py-40 bg-background border-t border-border">
+            <div class="max-w-6xl mx-auto px-6 md:px-10">
+                <div class="mb-16 md:mb-24">
+                    <p class="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-4 reveal-text">Workflow</p>
+                    <h2 class="text-4xl md:text-6xl font-display font-bold tracking-tight text-foreground reveal-text">使用方式</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+                    <div class="reveal-item">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-12 h-12 flex items-center justify-center border border-border rounded-full text-foreground font-mono">01</div>
+                            <div class="h-px flex-1 bg-border hidden md:block"></div>
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-medium text-foreground mb-3">选择工具</h3>
+                        <p class="text-muted-foreground leading-relaxed">根据需求选择检查器、分析器或预览器</p>
+                    </div>
+                    <div class="reveal-item">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-12 h-12 flex items-center justify-center border border-border rounded-full text-foreground font-mono">02</div>
+                            <div class="h-px flex-1 bg-border hidden md:block"></div>
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-medium text-foreground mb-3">上传文件</h3>
+                        <p class="text-muted-foreground leading-relaxed">点击或拖拽 .cube 或 PNG 格式的 LUT 文件</p>
+                    </div>
+                    <div class="reveal-item">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-12 h-12 flex items-center justify-center border border-border rounded-full text-foreground font-mono">03</div>
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-medium text-foreground mb-3">查看结果</h3>
+                        <p class="text-muted-foreground leading-relaxed">实时查看分析结果和可视化效果</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer id="footer" class="py-12 md:py-16 bg-background border-t border-border">
+            <div class="max-w-6xl mx-auto px-6 md:px-10 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-muted-foreground">© 2026 LUT分析工具箱</p>
+                <div class="flex items-center gap-6 text-sm text-muted-foreground">
+                    <a href="index1.html" class="hover:text-foreground transition-colors">检查器</a>
+                    <a href="index2.html" class="hover:text-foreground transition-colors">分析器</a>
+                    <a href="index3.html" class="hover:text-foreground transition-colors">预览器</a>
+                </div>
+            </div>
+        </footer>
+    </main>
+    <noscript>
+        <style>.reveal-text,.reveal-item,.hero-reveal{opacity:1!important;transform:none!important}</style>
+    </noscript>
+    <style>
+        html { scroll-behavior: smooth; }
+        .font-display { font-family: var(--yx-font-display); }
+        .reveal-text, .reveal-item, .hero-reveal { will-change: transform, opacity; opacity: 1 !important; transform: none !important; }
+        #hero-content { transform-style: preserve-3d; }
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .reveal-text, .reveal-item, .hero-reveal { opacity: 1 !important; transform: none !important; }
+        }
+    </style>
+    <script src="vendor/gsap/gsap.min.js"></script>
+    <script src="vendor/gsap/ScrollTrigger.min.js"></script>
+    <script>
+        (function() {
+            'use strict';
+
+            // Hero Canvas2D fluid/noise shader
+            const canvas = document.getElementById('hero-canvas');
+            const fallback = document.getElementById('hero-fallback');
+            let ctx;
+            try {
+                ctx = canvas && canvas.getContext('2d');
+            } catch (e) {
+                ctx = null;
+            }
+
+            if (!ctx) {
+                if (canvas) canvas.style.display = 'none';
+                if (fallback) fallback.style.display = 'block';
+            } else {
+                let width, height;
+                let mouse = { x: 0.5, y: 0.5 };
+                let targetMouse = { x: 0.5, y: 0.5 };
+                const particles = [];
+                const particleCount = 48;
+
+                function resize() {
+                    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                    width = window.innerWidth;
+                    height = window.innerHeight;
+                    canvas.width = Math.floor(width * dpr);
+                    canvas.height = Math.floor(height * dpr);
+                    canvas.style.width = width + 'px';
+                    canvas.style.height = height + 'px';
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                }
+
+                window.addEventListener('resize', resize, { passive: true });
+                resize();
+
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random(),
+                        y: Math.random(),
+                        vx: (Math.random() - 0.5) * 0.0004,
+                        vy: (Math.random() - 0.5) * 0.0004,
+                        size: 80 + Math.random() * 320,
+                        phase: Math.random() * Math.PI * 2,
+                        speed: 0.5 + Math.random() * 0.5
+                    });
+                }
+
+                document.addEventListener('mousemove', function(e) {
+                    targetMouse.x = e.clientX / window.innerWidth;
+                    targetMouse.y = e.clientY / window.innerHeight;
+                }, { passive: true });
+
+                function animate(time) {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.fillStyle = '#050505';
+                    ctx.fillRect(0, 0, width, height);
+
+                    mouse.x += (targetMouse.x - mouse.x) * 0.04;
+                    mouse.y += (targetMouse.y - mouse.y) * 0.04;
+
+                    ctx.globalCompositeOperation = 'screen';
+
+                    for (let i = 0; i < particleCount; i++) {
+                        const p = particles[i];
+                        const t = time * 0.00015 * p.speed;
+                        p.x += p.vx + Math.sin(t + p.phase) * 0.00025;
+                        p.y += p.vy + Math.cos(t * 0.7 + p.phase) * 0.00025;
+
+                        if (p.x < -0.15) p.x = 1.15;
+                        if (p.x > 1.15) p.x = -0.15;
+                        if (p.y < -0.15) p.y = 1.15;
+                        if (p.y > 1.15) p.y = -0.15;
+
+                        const mx = mouse.x * width;
+                        const my = mouse.y * height;
+                        const px = p.x * width;
+                        const py = p.y * height;
+                        const dist = Math.hypot(px - mx, py - my);
+                        const influence = Math.max(0, 1 - dist / 420);
+
+                        const currentSize = p.size * (1 + influence * 0.6);
+                        const gradient = ctx.createRadialGradient(px, py, 0, px, py, currentSize);
+                        const alpha = 0.025 + influence * 0.07;
+                        gradient.addColorStop(0, 'rgba(245, 245, 245, ' + alpha + ')');
+                        gradient.addColorStop(0.45, 'rgba(120, 120, 120, ' + (alpha * 0.4) + ')');
+                        gradient.addColorStop(1, 'rgba(5, 5, 5, 0)');
+
+                        ctx.fillStyle = gradient;
+                        ctx.fillRect(px - currentSize, py - currentSize, currentSize * 2, currentSize * 2);
+                    }
+
+                    requestAnimationFrame(animate);
+                }
+                requestAnimationFrame(animate);
+            }
+
+            // Hero 3D tilt mouse follow (limited to hero)
+            const hero = document.getElementById('hero');
+            const heroContent = document.getElementById('hero-content');
+            if (hero && heroContent) {
+                hero.addEventListener('mousemove', function(e) {
+                    const rect = hero.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - 0.5;
+                    const y = (e.clientY - rect.top) / rect.height - 0.5;
+                    heroContent.style.transform = 'perspective(1000px) rotateX(' + (-y * 5) + 'deg) rotateY(' + (x * 5) + 'deg)';
+                }, { passive: true });
+                hero.addEventListener('mouseleave', function() {
+                    heroContent.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+                });
+            }
+
+            // GSAP scroll reveals
+            if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+                gsap.registerPlugin(ScrollTrigger);
+
+                gsap.from('#hero-content .hero-reveal', {
+                    y: 60,
+                    opacity: 0,
+                    duration: 1.2,
+                    stagger: 0.15,
+                    ease: 'power3.out',
+                    delay: 0.2
+                });
+
+                gsap.utils.toArray('.reveal-item').forEach(function(item) {
+                    gsap.from(item, {
+                        scrollTrigger: {
+                            trigger: item,
+                            start: 'top 85%',
+                            toggleActions: 'play none none none'
+                        },
+                        y: 40,
+                        opacity: 0,
+                        duration: 0.8,
+                        ease: 'power3.out'
+                    });
+                });
+            }
+
+            // Initialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        })();
+    </script>
+    <script src="js/sw-register.js?v=20260904-5"></script>
+    <script src="js/auth.js?v=20260904-5"></script>
+</body>
+</html>

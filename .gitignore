@@ -1,0 +1,8 @@
+.gjx-server.pid
+gjx-server.log
+.lut-analysis-toolbox-server.pid
+lut-analysis-toolbox-server.log
+.DS_Store
+node_modules/
+dist/
+npm-debug.log*

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <title>分析器 - LUT分析工具箱</title>
+    <meta name="description" content="LUT 分析器，3D RGB 立方体可视化、IRE 图表、角点分析">
+    <meta name="keywords" content="LUT分析,3D可视化,IRE图表,角点分析">
+
+    <link rel="preload" href="css/style.min.css?v=20260806" as="style">
+    <link rel="preload" href="css/analyzer.min.css?v=20260806" as="style">
+    <link rel="preload" href="assets/fonts/josefinsans-v25-regular.woff2?v=20260806" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="assets/fonts/nunito-v25-regular.woff2?v=20260806" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="assets/fonts/bebasneue-v14-regular.woff2?v=20260806" as="font" type="font/woff2" crossorigin>
+
+    <link rel="stylesheet" href="css/style.min.css?v=20260806">
+    <link rel="stylesheet" href="css/analyzer.min.css?v=20260806">
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234ade80' width='100' height='100' rx='20'/><text y='.7em' font-size='60' fill='black' text-anchor='middle'>L</text></svg>">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        /* P0 同步首页 NOTHIN' 设计系统：覆盖式变量 + 极简导航 + 色调对齐 */
+        :root {
+            --color-bg: #050505;
+            --color-bg-card: #0a0a0a;
+            --color-bg-section: #141414;
+            --color-text-primary: #f5f5f5;
+            --color-text-secondary: #d0d0d0;
+            --color-text-muted: #8a8a8a;
+            --color-accent: #f5f5f5;
+            --color-border: #262626;
+            --color-border-light: #1a1a1a;
+            --font-body: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+            --font-display: "Bebas Neue", "Inter Tight", "Noto Sans SC", Impact, sans-serif;
+            --font-mono: "SF Mono", "Fira Code", "Noto Sans SC", monospace;
+        }
+        body { background: #050505; color: #f5f5f5; font-family: var(--font-body); }
+        body > .wrapper { padding-top: 64px; }
+
+        /* 隐藏 loading-overlay（与首页一致） */
+        .loading-overlay { display: none !important; }
+
+        /* 首页同款极简导航 */
+        .yx-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(38, 38, 38, 0.5);
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .yx-nav-brand {
+            font-size: 18px; font-weight: 500; letter-spacing: -0.01em;
+            color: #f5f5f5; text-decoration: none;
+        }
+        .yx-nav-links { display: flex; align-items: center; gap: 32px; }
+        .yx-nav-links a {
+            font-size: 14px; color: #8a8a8a; text-decoration: none;
+            transition: color 0.2s;
+        }
+        .yx-nav-links a:hover,
+        .yx-nav-links a[aria-current="page"] { color: #f5f5f5; }
+        .yx-nav-toggle { display: none; }
+
+        /* 隐藏旧 Neve 导航残留（如有） */
+        .header--row, .nv-navbar, .header--row-inner { display: none !important; }
+
+        /* 去掉绿色装饰使用 */
+        .logo, .nv-html-content a { color: #f5f5f5 !important; text-decoration: none; }
+
+        /* 旧版水印与首页风格不符，弱化 */
+        .copyright-watermark, .copyright-footer { color: #8a8a8a; border-color: #262626; }
+
+        /* range input 数值显示：grid 第三列，纯文字融入 NOTHIN' 风格 */
+        .row { grid-template-columns: 120px 1fr auto !important; }
+        .range-value {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: #8a8a8a;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.04em;
+            min-width: 36px;
+            text-align: right;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .yx-nav-links { display: none; }
+            .yx-nav-toggle {
+                display: inline-flex; align-items: center; justify-content: center;
+                width: 32px; height: 32px; color: #f5f5f5; background: none; border: none; cursor: pointer;
+            }
+            .yx-nav-toggle svg { width: 20px; height: 20px; }
+        }
+
+        /* Password Auth Overlay */
+        #auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: #050505;
+            z-index: 2147483647;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        #auth-overlay .auth-box {
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+        #auth-overlay .auth-lock {
+            color: #f5f5f5;
+            margin-bottom: 32px;
+            display: inline-flex;
+        }
+        #auth-overlay .auth-title {
+            font-family: "Bebas Neue", "Inter Tight", "Noto Sans SC", Impact, sans-serif;
+            font-size: 28px;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            color: #f5f5f5;
+            margin: 0 0 8px;
+        }
+        #auth-overlay .auth-subtitle {
+            font-family: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+            font-size: 13px;
+            color: #8a8a8a;
+            margin: 0 0 40px;
+            letter-spacing: 0.02em;
+        }
+        #auth-overlay .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        #auth-overlay .auth-input {
+            width: 100%;
+            background: #0a0a0a;
+            border: 1px solid #262626;
+            border-radius: 6px;
+            color: #f5f5f5;
+            font-family: "SF Mono", "Fira Code", "Noto Sans SC", monospace;
+            font-size: 14px;
+            padding: 12px 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+        }
+        #auth-overlay .auth-input::placeholder {
+            color: #555;
+        }
+        #auth-overlay .auth-input:focus {
+            border-color: #f5f5f5;
+        }
+        #auth-overlay .auth-submit {
+            width: 100%;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 6px;
+            color: #050505;
+            font-family: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 12px;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            transition: opacity 0.2s ease;
+        }
+        #auth-overlay .auth-submit:hover {
+            opacity: 0.85;
+        }
+        #auth-overlay .auth-submit.loading {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #auth-overlay .auth-error {
+            font-family: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+            font-size: 12px;
+            color: #8a8a8a;
+            margin: 12px 0 0;
+            min-height: 0;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        #auth-overlay .auth-error.show {
+            opacity: 1;
+            color: #cfcfcf;
+        }
+        #auth-overlay .auth-footer {
+            font-family: "SF Mono", "Fira Code", "Noto Sans SC", monospace;
+            font-size: 10px;
+            color: #333;
+            letter-spacing: 0.3em;
+            margin: 40px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <nav class="yx-nav" aria-label="主导航">
+            <a href="index.html" class="yx-nav-brand">LUT分析工具箱</a>
+            <div class="yx-nav-links">
+                <a href="index1.html">检查器</a>
+                <a href="index2.html" aria-current="page">分析器</a>
+                <a href="index3.html">预览器</a>
+            </div>
+            <button class="yx-nav-toggle" aria-label="菜单" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+        </nav>
+
+        <main id="content" class="neve-main">
+            <div class="controls" role="region" aria-label="滤镜控制面板">
+                <h1>LUT3D分析器</h1>
+                <p>上传 .cube 文件。拖动旋转。使用鼠标滚轮缩放。安全限制：最大 65³，文件最大 9 MB。</p>
+
+                <div class="drop-zone" id="drop-zone" aria-label="拖拽 LUT 文件到此处或点击选择">
+                    <input id="lutfile" type="file" accept=".cube" class="drop-zone-input" aria-label="选择 LUT 文件">
+                    <div class="drop-zone-content">
+                        <div class="drop-zone-text">选择 LUT</div>
+                        <div class="drop-zone-hint">或拖拽文件到此处</div>
+                    </div>
+                </div>
+                <div id="filename" class="name" aria-live="polite"></div>
+
+                <div class="row">
+                    <label class="slabel" for="blend">混合度</label>
+                    <input id="blend" type="range" min="0" max="1" step="0.01" value="0" aria-label="LUT 混合程度">
+                </div>
+                <div class="row">
+                    <label class="slabel" for="density">点密度</label>
+                    <input id="density" type="range" min="17" max="33" step="2" value="17" aria-label="点密度">
+                </div>
+                <div class="row">
+                    <label class="slabel" for="psize">点大小</label>
+                    <input id="psize" type="range" min="2" max="4" step="0.1" value="3" aria-label="点大小">
+                </div>
+                <div class="row">
+                    <label class="slabel" for="bg">背景</label>
+                    <input id="bg" type="range" min="0" max="1" step="0.01" value="0" aria-label="背景颜色 黑 ↔ 白">
+                </div>
+                <div class="row">
+                    <label class="slabel" for="autorotate">自动旋转</label>
+                    <input id="autorotate" type="checkbox" checked aria-label="切换自动旋转">
+                </div>
+                <div class="row">
+                    <label class="slabel" for="bbox">显示边框</label>
+                    <input id="bbox" type="checkbox" aria-label="显示 RGB 参考边框">
+                </div>
+                <div class="row">
+                    <label class="slabel" for="neutrals">仅中性色</label>
+                    <input id="neutrals" type="checkbox" aria-label="仅显示中性色（灰色）轴">
+                </div>
+                <div class="row">
+                    <label class="slabel" for="iretoggle">显示 IRE 图表</label>
+                    <input id="iretoggle" type="checkbox" aria-label="叠加 IRE 图表">
+                </div>
+                <div class="row">
+                    <span class="slabel">角点</span>
+                    <div class="corner-buttons-wrap">
+                        <div class="corner-buttons">
+                            <button type="button" class="corner-btn" data-corner="red" aria-label="显示红色角点">红色</button>
+                            <button type="button" class="corner-btn" data-corner="green" aria-label="显示绿色角点">绿色</button>
+                            <button type="button" class="corner-btn" data-corner="blue" aria-label="显示蓝色角点">蓝色</button>
+                        </div>
+                        <div class="corner-buttons">
+                            <button type="button" class="corner-btn" data-corner="cyan" aria-label="显示青色角点">青色</button>
+                            <button type="button" class="corner-btn" data-corner="magenta" aria-label="显示品红角点">品红</button>
+                            <button type="button" class="corner-btn" data-corner="yellow" aria-label="显示黄色角点">黄色</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-summary">
+                    <h3 class="analysis-summary-title">分析总结</h3>
+                    <div class="analysis-summary-grid">
+                        <div class="analysis-summary-item">
+                            <span class="analysis-summary-label">尺寸</span>
+                            <span id="analysis-size" class="analysis-summary-value">-</span>
+                        </div>
+                        <div class="analysis-summary-item">
+                            <span class="analysis-summary-label">动态范围</span>
+                            <span id="analysis-range" class="analysis-summary-value">-</span>
+                        </div>
+                        <div class="analysis-summary-item">
+                            <span class="analysis-summary-label">对比度</span>
+                            <span id="analysis-contrast" class="analysis-summary-value">-</span>
+                        </div>
+                        <div class="analysis-summary-item">
+                            <span class="analysis-summary-label">饱和度</span>
+                            <span id="analysis-saturation" class="analysis-summary-value">-</span>
+                        </div>
+                        <div class="analysis-summary-item">
+                            <span class="analysis-summary-label">黑电平提升</span>
+                            <span id="analysis-black-lift" class="analysis-summary-value">-</span>
+                        </div>
+                        <div class="analysis-summary-item">
+                            <span class="analysis-summary-label">白电平下降</span>
+                            <span id="analysis-white-drop" class="analysis-summary-value">-</span>
+                        </div>
+                        <div class="analysis-summary-item">
+                            <span class="analysis-summary-label">色彩偏移</span>
+                            <span id="analysis-cast" class="analysis-summary-value">-</span>
+                        </div>
+                        <div class="analysis-summary-item">
+                            <span class="analysis-summary-label">质量评分</span>
+                            <span id="analysis-score" class="analysis-summary-value">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <canvas id="cube" aria-label="3D RGB 立方体可视化"></canvas>
+            <div class="cube-vignette"></div>
+
+            <div id="ireOverlay" aria-hidden="true">
+                <div id="ireBox">
+                    <canvas id="ireCanvas" aria-label="IRE 图表上的 RGB 值"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/lut-utils.js?v=20260904-4"></script>
+    <script src="js/utils.min.js?v=20260805"></script>
+    <script src="js/lutanayzer.min.js?v=20260904-4"></script>
+    <script src="js/bug-detect.min.js?v=20260806"></script>
+
+    <div class="copyright-watermark">LUT分析工具箱</div>
+    <div class="copyright-footer">LUT分析工具箱 参考网页https://mononodes.com/lut-cube-analyzer/</div>
+
+    <script>
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(function(registration) {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('Service Worker registration failed:', error);
+                });
+        }
+    </script>
+    <script>
+        /* range input 数值显示注入：自动给所有 range 添加实时数值标签 */
+        (function() {
+            'use strict';
+
+            function formatValue(input) {
+                const v = parseFloat(input.value);
+                const step = parseFloat(input.step) || 1;
+                const max = parseFloat(input.max);
+                const min = parseFloat(input.min);
+                // 0~1 范围且步进 <= 0.01 → 百分比显示
+                if (max <= 1 && min >= 0 && step <= 0.01) {
+                    return Math.round(v * 100) + '%';
+                }
+                // 步进为整数 → 整数显示
+                if (step >= 1) {
+                    return Math.round(v).toString();
+                }
+                // 其他 → 跟随 step 精度
+                const decimals = (step.toString().split('.')[1] || '').length;
+                return v.toFixed(decimals);
+            }
+
+            function createBadge(input) {
+                const parent = input.parentElement;
+                if (!parent) return null;
+                if (parent.querySelector('.range-value[data-for="' + (input.id || '') + '"]')) return null;
+                const span = document.createElement('span');
+                span.className = 'range-value';
+                span.setAttribute('data-for', input.id || '');
+                parent.appendChild(span);
+                return span;
+            }
+
+            function sync(input, span) {
+                span.textContent = formatValue(input);
+            }
+
+            function init() {
+                document.querySelectorAll('input[type="range"]').forEach(function(input) {
+                    const span = createBadge(input);
+                    if (!span) return;
+                    sync(input, span);
+                    input.addEventListener('input', function() { sync(input, span); });
+                    input.addEventListener('change', function() { sync(input, span); });
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+    <script src="js/sw-register.js?v=20260904-5"></script>
+    <script src="js/auth.js?v=20260904-5"></script>
+</body>
+</html>

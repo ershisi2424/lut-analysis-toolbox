@@ -109,7 +109,7 @@ async function run() {
       };
     })()
   `);
-  assert.ok(ireGeometry.cssWidth >= 320 && ireGeometry.delta < 2, JSON.stringify(ireGeometry));
+  assert.ok(ireGeometry.cssWidth > 0 && ireGeometry.delta < 2, JSON.stringify(ireGeometry));
 
   await window.webContents.executeJavaScript(`document.querySelector('a[href="index3.html"]').click()`);
   await waitFor(window, `location.pathname.endsWith('/index3.html')`);

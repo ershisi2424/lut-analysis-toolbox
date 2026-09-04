@@ -198,7 +198,28 @@ async function run() {
     (() => {
       const controls = document.querySelector('.convert-section').getBoundingClientRect();
       const viewer = document.querySelector('.preview-section').getBoundingClientRect();
-      return { controlsLeft: controls.left, viewerLeft: viewer.left, topDelta: Math.abs(controls.top - viewer.top), overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+      const clientWidth = document.documentElement.clientWidth;
+      const overflowElements = [...document.querySelectorAll('body *')]
+        .map(element => {
+          const rect = element.getBoundingClientRect();
+          return {
+            selector: element.id ? '#' + element.id : element.className && typeof element.className === 'string' ? '.' + element.className.trim().replace(/\\s+/g, '.') : element.tagName.toLowerCase(),
+            left: Math.round(rect.left),
+            right: Math.round(rect.right),
+            width: Math.round(rect.width)
+          };
+        })
+        .filter(item => item.right > clientWidth + 1 || item.left < -1)
+        .sort((a, b) => b.right - a.right)
+        .slice(0, 8);
+      return {
+        controlsLeft: controls.left,
+        viewerLeft: viewer.left,
+        topDelta: Math.abs(controls.top - viewer.top),
+        overflow: document.documentElement.scrollWidth - clientWidth,
+        clientWidth,
+        overflowElements
+      };
     })()
   `);
   assert.ok(previewLayout.viewerLeft > previewLayout.controlsLeft && previewLayout.topDelta < 20, JSON.stringify(previewLayout));

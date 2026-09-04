@@ -947,6 +947,7 @@ body.desktop-previewer .upload-row {
 body.desktop-previewer .previewer-body {
   gap: 16px;
   grid-template-columns: 248px minmax(0, 1fr);
+  min-width: 0;
 }
 
 body.desktop-previewer .preview-main {
@@ -954,12 +955,14 @@ body.desktop-previewer .preview-main {
   grid-template-columns: minmax(300px, 350px) minmax(470px, 1fr);
   align-items: start;
   gap: 16px;
+  min-width: 0;
   overflow: visible;
 }
 
 body.desktop-previewer .convert-section {
   grid-column: 1;
   grid-row: 1;
+  min-width: 0;
 }
 
 body.desktop-previewer .preview-section {
@@ -990,6 +993,15 @@ body.desktop-previewer .lut-list-section,
 body.desktop-previewer .preview-section,
 body.desktop-previewer .convert-section {
   padding: 16px;
+}
+
+body.desktop-previewer .convert-controls,
+body.desktop-previewer .advanced-settings,
+body.desktop-previewer .png-settings,
+body.desktop-previewer .slider-grid,
+body.desktop-previewer .slider-control,
+body.desktop-previewer .control-label {
+  min-width: 0;
 }
 
 body.desktop-previewer .control-select,

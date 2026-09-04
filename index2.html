@@ -203,8 +203,9 @@
             margin: 40px 0 0;
         }
     </style>
+    <link rel="stylesheet" href="css/desktop-shell.css?v=20260904-1">
 </head>
-<body>
+<body class="desktop-app desktop-analyzer">
     <div class="wrapper">
         <nav class="yx-nav" aria-label="主导航">
             <a href="index.html" class="yx-nav-brand">LUT分析工具箱</a>
@@ -220,14 +221,16 @@
 
         <main id="content" class="neve-main">
             <div class="controls" role="region" aria-label="滤镜控制面板">
-                <h1>LUT3D分析器</h1>
-                <p>上传 .cube 文件。拖动旋转。使用鼠标滚轮缩放。安全限制：最大 65³，文件最大 9 MB。</p>
+                <div class="workspace-meta"><span class="workspace-kicker">3D COLOR SPACE</span><span class="workspace-status">工作区就绪</span></div>
+                <h1>LUT 3D 分析器</h1>
+                <p>导入 .cube 后检查色彩空间映射。画布可拖动旋转，滚轮缩放；支持最大 65³、9 MB。</p>
 
-                <div class="drop-zone" id="drop-zone" aria-label="拖拽 LUT 文件到此处或点击选择">
+                <div class="drop-zone" id="drop-zone" role="button" tabindex="0" data-file-trigger="lutfile" aria-label="导入 LUT 文件">
                     <input id="lutfile" type="file" accept=".cube" class="drop-zone-input" aria-label="选择 LUT 文件">
                     <div class="drop-zone-content">
-                        <div class="drop-zone-text">选择 LUT</div>
-                        <div class="drop-zone-hint">或拖拽文件到此处</div>
+                        <span class="import-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 18v2h14v-2"/></svg></span>
+                        <span class="import-copy"><span class="drop-zone-text">导入 3D LUT</span><span class="drop-zone-hint">点击选择或拖放 .cube 文件</span></span>
+                        <span class="import-shortcut">Ctrl O</span>
                     </div>
                 </div>
                 <div id="filename" class="name" aria-live="polite"></div>
@@ -404,7 +407,8 @@
             }
         })();
     </script>
-    <script src="js/sw-register.js?v=20260904-5"></script>
+    <script src="js/desktop-ui.js?v=20260904-1"></script>
+    <script src="js/sw-register.js?v=20260904-6"></script>
     <script src="js/auth.js?v=20260904-5"></script>
 </body>
 </html>

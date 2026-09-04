@@ -27,6 +27,21 @@ for (const page of pages) {
   assert.equal(new Set(ids).size, ids.length, `${page} must not contain duplicate element IDs`);
 }
 
+for (const page of ['index.html', 'index1.html', 'index2.html', 'index3.html']) {
+  const html = fs.readFileSync(path.join(root, page), 'utf8');
+  assert.match(html, /css\/desktop-shell\.css\?v=/, `${page} must load the desktop application shell`);
+  assert.match(html, /class="[^"]*desktop-app desktop-(?:home|checker|analyzer|previewer)/, `${page} must identify its desktop workspace`);
+}
+
+for (const page of ['index1.html', 'index2.html', 'index3.html']) {
+  const html = fs.readFileSync(path.join(root, page), 'utf8');
+  assert.match(html, /js\/desktop-ui\.js\?v=/, `${page} must load desktop interactions`);
+}
+
+const analyzerPage = fs.readFileSync(path.join(root, 'index2.html'), 'utf8');
+assert.match(analyzerPage, /data-file-trigger="lutfile"/);
+assert.match(analyzerPage, /导入 3D LUT/);
+
 const trackedText = pages.concat([
   'README.md', 'README-本地运行.md', 'manifest.json', 'package.json',
   'js/auth.js', 'electron/main.js', '启动LUT分析工具箱.command', '关闭LUT分析工具箱.command'
@@ -52,13 +67,13 @@ assert.doesNotMatch(analyzer, /Math\.max\(320,Math\.round\(O\.clientWidth/);
 assert.ok(fs.existsSync(path.join(root, 'css/analyzer-layout-fix.css')));
 
 const serviceWorker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-assert.match(serviceWorker, /lut-analysis-toolbox-v2/);
+assert.match(serviceWorker, /lut-analysis-toolbox-v3/);
 const cachedPaths = [...serviceWorker.matchAll(/'\.\/([^']+)'/g)].map(match => match[1]).filter(item => item && item !== './');
 for (const cachedPath of cachedPaths) assert.ok(fs.existsSync(path.join(root, cachedPath)), `service worker references missing file ${cachedPath}`);
 
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 assert.equal(packageJson.name, 'lut-analysis-toolbox');
-assert.equal(packageJson.version, '1.0.1');
+assert.equal(packageJson.version, '1.1.0');
 assert.equal(packageJson.build.productName, 'LUT分析工具箱');
 assert.match(packageJson.build.artifactName, /^LUT-Analysis-Toolbox-/);
 assert.ok(fs.existsSync(path.join(root, packageJson.main)));

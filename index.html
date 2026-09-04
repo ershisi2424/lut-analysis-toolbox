@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LUT分析工具箱 - 专业 LUT 分析工具</title>
-    <meta name="description" content="LUT分析工具箱，专业级在线 LUT 分析工具，支持检查、分析和预览 3D .cube 文件，提供波形图、彩虹测试、通道分析等功能。">
+    <meta name="description" content="LUT分析工具箱，本地 LUT 分析客户端，支持检查、分析和预览 3D .cube 文件，提供波形图、彩虹测试、通道分析等功能。">
     <meta name="keywords" content="LUT分析,cube文件,色彩查找表,调色工具">
     <meta name="author" content="LUT分析工具箱">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -306,13 +306,14 @@
         margin: 40px 0 0;
       }
     </style>
+    <link rel="stylesheet" href="css/desktop-shell.css?v=20260904-2">
 </head>
-<body class="min-h-screen font-sans antialiased">
+<body class="desktop-app desktop-home min-h-screen font-sans antialiased">
     <main>
         <!-- Navigation -->
-        <nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 md:px-10 border-b border-border/50 bg-background/80 backdrop-blur-md">
-            <a href="#" class="text-lg font-medium tracking-tight text-foreground">LUT分析工具箱</a>
-            <div class="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+        <nav class="yx-nav fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 md:px-10 border-b border-border/50 bg-background/80 backdrop-blur-md" aria-label="主导航">
+            <a href="#" class="yx-nav-brand text-lg font-medium tracking-tight text-foreground">LUT分析工具箱</a>
+            <div class="yx-nav-links hidden md:flex items-center gap-8 text-sm text-muted-foreground">
                 <a href="index1.html" class="hover:text-foreground transition-colors">检查器</a>
                 <a href="index2.html" class="hover:text-foreground transition-colors">分析器</a>
                 <a href="index3.html" class="hover:text-foreground transition-colors">预览器</a>
@@ -332,7 +333,7 @@
                     LUT<br><span class="text-muted-foreground">分析工具箱</span>
                 </h1>
                 <p class="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-                    专业级在线工具，用于检查、分析和预览 3D LUT 文件
+                    本地专业工作台，用于检查、分析和预览 3D LUT 文件
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <a id="start-using-link" href="index1.html" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-foreground text-primary-foreground text-sm font-medium rounded-md hover:bg-muted-foreground transition-colors">
@@ -647,7 +648,7 @@
             }
         })();
     </script>
-    <script src="js/sw-register.js?v=20260904-5"></script>
+    <script src="js/sw-register.js?v=20260904-6"></script>
     <script src="js/auth.js?v=20260904-5"></script>
 </body>
 </html>

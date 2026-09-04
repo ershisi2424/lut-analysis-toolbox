@@ -182,8 +182,9 @@
             margin: 40px 0 0;
         }
     </style>
+    <link rel="stylesheet" href="css/desktop-shell.css?v=20260904-1">
 </head>
-<body>
+<body class="desktop-app desktop-checker">
     <div class="wrapper">
         <nav class="yx-nav" aria-label="主导航">
             <a href="index.html" class="yx-nav-brand">LUT分析工具箱</a>
@@ -205,11 +206,12 @@
                             <h1 class="wp-block-heading has-text-align-center">LUT 检查器</h1>
 
                             <div id="lutviz" class="lutviz-card" role="region" aria-label="LUT 可视化工具">
-                                <div class="drop-zone" id="drop-zone" aria-label="拖拽 LUT 文件到此处或点击选择">
+                                <div class="drop-zone" id="drop-zone" role="button" tabindex="0" data-file-trigger="lutviz-file" aria-label="导入 LUT 文件">
                                     <input type="file" id="lutviz-file" accept=".cube,.png" class="drop-zone-input" aria-label="选择 LUT 文件">
                                     <div class="drop-zone-content">
-                                        <div class="drop-zone-text">选择 LUT (.cube / .png)</div>
-                                        <div class="drop-zone-hint">或拖拽文件到此处</div>
+                                        <span class="import-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 18v2h14v-2"/></svg></span>
+                                        <span class="import-copy"><span class="drop-zone-text">导入 LUT 文件</span><span class="drop-zone-hint">支持 .cube 与 Hald PNG，或拖放到这里</span></span>
+                                        <span class="import-shortcut">Ctrl O</span>
                                     </div>
                                 </div>
                                 <div id="lutviz-name" class="lutviz-name" aria-live="polite"></div>
@@ -404,7 +406,8 @@
     <div class="copyright-watermark">LUT分析工具箱</div>
     <div class="copyright-footer">LUT分析工具箱 参考网页https://mononodes.com/lut-inspector/</div>
 
-    <script src="js/sw-register.js?v=20260904-5"></script>
+    <script src="js/desktop-ui.js?v=20260904-1"></script>
+    <script src="js/sw-register.js?v=20260904-6"></script>
     <script src="js/auth.js?v=20260904-5"></script>
 </body>
 </html>

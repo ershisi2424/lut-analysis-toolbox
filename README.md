@@ -2,20 +2,20 @@
 
 一个离线运行的 3D LUT 检查、分析、预览与转换工具。项目同时支持浏览器本地运行和 Windows x64 便携 EXE。
 
-当前版本：`1.0.1`
+当前版本：`1.1.0`
 访问密码：`1820900463`
 
 ## 功能
 
 - LUT 检查器：读取 `.cube` 文件，显示尺寸、范围、动态范围、对比度、曲线、色相分布、热力图和矢量示波器。
-- LUT 分析器：检查中性轴、平滑度、饱和度响应和 IRE 响应。
+- LUT 分析器：提供独立的可见导入入口，检查中性轴、平滑度、饱和度响应和 IRE 响应。
 - LUT 预览器：在内置图或用户图片上实时比较原图与 LUT 结果。
 - LUT 转换：三线性、四面体和 Catmull-Rom 插值，支持 2～65 阶重采样、平滑、色域压缩与 `.cube` 导出。
 - Hald CLUT：支持生成和读取标准方形 Hald 图。
 
 ## Windows 便携版
 
-在 GitHub Releases 下载 `LUT-Analysis-Toolbox-1.0.1-portable.exe`，双击即可运行，无需安装 Node.js。
+在 GitHub Releases 下载 `LUT-Analysis-Toolbox-1.1.0-portable.exe`，双击即可运行，无需安装 Node.js。
 
 Windows 便携版由 GitHub Actions 在 `windows-latest` x64 环境中重新测试和构建。每个 Release 同时提供 `SHA256SUMS.txt`，可用于验证文件完整性。
 

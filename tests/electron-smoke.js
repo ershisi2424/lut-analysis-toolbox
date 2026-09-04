@@ -92,6 +92,26 @@ async function run() {
 
   await window.webContents.executeJavaScript(`document.querySelector('a[href="index2.html"]').click()`);
   await waitFor(window, `location.pathname.endsWith('/index2.html')`);
+  const analyzerImport = await window.webContents.executeJavaScript(`
+    (() => {
+      const zone = document.getElementById('drop-zone');
+      const rect = zone.getBoundingClientRect();
+      const style = getComputedStyle(zone);
+      return {
+        width: rect.width,
+        height: rect.height,
+        display: style.display,
+        visibility: style.visibility,
+        trigger: zone.dataset.fileTrigger,
+        label: zone.textContent.replace(/\\s+/g, ' ').trim()
+      };
+    })()
+  `);
+  assert.ok(analyzerImport.width >= 280 && analyzerImport.height >= 80, JSON.stringify(analyzerImport));
+  assert.equal(analyzerImport.visibility, 'visible');
+  assert.notEqual(analyzerImport.display, 'none');
+  assert.equal(analyzerImport.trigger, 'lutfile');
+  assert.match(analyzerImport.label, /导入 3D LUT/);
   await setFileInput(window, 'lutfile', 'identity.cube', 'text/plain', JSON.stringify(identityCube));
   await waitFor(window, `document.getElementById('analysis-size').textContent === '2x2x2'`);
   assert.equal(await window.webContents.executeJavaScript(`document.getElementById('analysis-range').textContent`), '100.0%');

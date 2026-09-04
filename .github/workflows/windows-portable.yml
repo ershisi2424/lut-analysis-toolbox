@@ -34,10 +34,12 @@ jobs:
       - name: Generate SHA-256 checksums
         shell: pwsh
         run: |
-          Get-ChildItem dist -Filter *.exe | ForEach-Object {
+          $lines = Get-ChildItem dist -Filter *.exe | ForEach-Object {
             $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
-            "$hash  $($_.Name)" | Add-Content -Encoding utf8 dist/SHA256SUMS.txt
+            "$hash  $($_.Name)"
           }
+          $content = ($lines -join "`n") + "`n"
+          [System.IO.File]::WriteAllText((Join-Path $PWD 'dist/SHA256SUMS.txt'), $content, [System.Text.UTF8Encoding]::new($false))
       - name: Upload verified build artifact
         uses: actions/upload-artifact@v4
         with:

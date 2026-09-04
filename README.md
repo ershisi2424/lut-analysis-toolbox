@@ -2,7 +2,7 @@
 
 一个离线运行的 3D LUT 检查、分析、预览与转换工具。项目同时支持浏览器本地运行和 Windows x64 便携 EXE。
 
-当前版本：`1.0.0`
+当前版本：`1.0.1`
 访问密码：`1820900463`
 
 ## 功能
@@ -15,7 +15,7 @@
 
 ## Windows 便携版
 
-在 GitHub Releases 下载 `LUT分析工具箱-1.0.0-portable.exe`，双击即可运行，无需安装 Node.js。
+在 GitHub Releases 下载 `LUT-Analysis-Toolbox-1.0.1-portable.exe`，双击即可运行，无需安装 Node.js。
 
 Windows 便携版由 GitHub Actions 在 `windows-latest` x64 环境中重新测试和构建。每个 Release 同时提供 `SHA256SUMS.txt`，可用于验证文件完整性。
 

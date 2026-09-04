@@ -58,7 +58,9 @@ for (const cachedPath of cachedPaths) assert.ok(fs.existsSync(path.join(root, ca
 
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 assert.equal(packageJson.name, 'lut-analysis-toolbox');
+assert.equal(packageJson.version, '1.0.1');
 assert.equal(packageJson.build.productName, 'LUT分析工具箱');
+assert.match(packageJson.build.artifactName, /^LUT-Analysis-Toolbox-/);
 assert.ok(fs.existsSync(path.join(root, packageJson.main)));
 assert.ok(fs.existsSync(path.join(root, packageJson.build.win.icon)));
 

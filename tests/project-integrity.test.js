@@ -48,6 +48,7 @@ const analyzer = fs.readFileSync(path.join(root, 'js/lutanayzer.min.js'), 'utf8'
 assert.match(analyzer, /O\.width\/ireDpr/);
 assert.match(analyzer, /O\.height\/ireDpr/);
 assert.doesNotMatch(analyzer, /O\.width\/\(window\.devicePixelRatio/);
+assert.ok(fs.existsSync(path.join(root, 'css/analyzer-layout-fix.css')));
 
 const serviceWorker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 assert.match(serviceWorker, /lut-analysis-toolbox-v2/);

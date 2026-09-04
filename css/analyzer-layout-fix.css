@@ -1,0 +1,23 @@
+/* Keep the IRE canvas CSS size independent from its high-DPI backing buffer. */
+#ireBox {
+  width: var(--ire-width);
+}
+
+#ireCanvas {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 960px) {
+  #ireBox {
+    width: 85vw;
+  }
+}
+
+@media (max-width: 480px) {
+  #ireBox {
+    width: 90vw;
+  }
+}

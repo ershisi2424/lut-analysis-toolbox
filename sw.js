@@ -11,6 +11,7 @@ const STATIC_ASSETS = [
   './css/style.min.css',
   './css/canvas-size-fix.css',
   './css/analyzer.min.css',
+  './css/analyzer-layout-fix.css',
   './css/previewer.min.css',
   './js/auth.js',
   './js/sw-register.js',

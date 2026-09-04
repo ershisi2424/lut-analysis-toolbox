@@ -97,14 +97,19 @@ async function run() {
   assert.equal(await window.webContents.executeJavaScript(`document.getElementById('analysis-range').textContent`), '100.0%');
   await window.webContents.executeJavaScript(`document.getElementById('iretoggle').click()`);
   await waitFor(window, `document.getElementById('ireOverlay').classList.contains('show')`);
-  const ireComplete = await window.webContents.executeJavaScript(`
+  const ireGeometry = await window.webContents.executeJavaScript(`
     (() => {
       const canvas = document.getElementById('ireCanvas');
       const ratio = Math.min(2, window.devicePixelRatio || 1);
-      return Math.abs(canvas.width / ratio - canvas.clientWidth) < 2;
+      return {
+        backingWidth: canvas.width,
+        cssWidth: canvas.clientWidth,
+        ratio,
+        delta: Math.abs(canvas.width / ratio - canvas.clientWidth)
+      };
     })()
   `);
-  assert.equal(ireComplete, true);
+  assert.ok(ireGeometry.cssWidth >= 320 && ireGeometry.delta < 2, JSON.stringify(ireGeometry));
 
   await window.webContents.executeJavaScript(`document.querySelector('a[href="index3.html"]').click()`);
   await waitFor(window, `location.pathname.endsWith('/index3.html')`);

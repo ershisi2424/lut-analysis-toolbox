@@ -203,7 +203,7 @@
             margin: 40px 0 0;
         }
     </style>
-    <link rel="stylesheet" href="css/desktop-shell.css?v=20260904-1">
+    <link rel="stylesheet" href="css/desktop-shell.css?v=20260905-1">
 </head>
 <body class="desktop-app desktop-analyzer">
     <div class="wrapper">
@@ -320,6 +320,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="family-summary" aria-label="基础色系总结">
+                    <div class="family-summary-head"><span>基础色系</span><span>亮度</span><span>饱和度</span><span>色相</span></div>
+                    <div id="family-summary-table" class="family-summary-table"><p>导入 LUT 后显示六个基础色系变化。</p></div>
+                    <small>基于 RGB 代码值采样，不代表实际显示亮度。</small>
+                </div>
             </div>
 
             <canvas id="cube" aria-label="3D RGB 立方体可视化"></canvas>
@@ -408,7 +413,8 @@
         })();
     </script>
     <script src="js/desktop-ui.js?v=20260904-1"></script>
-    <script src="js/sw-register.js?v=20260904-6"></script>
+    <script src="js/workspace-features.js?v=20260905-1"></script>
+    <script src="js/sw-register.js?v=20260905-1"></script>
     <script src="js/auth.js?v=20260904-5"></script>
 </body>
 </html>

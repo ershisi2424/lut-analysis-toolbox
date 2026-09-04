@@ -13,7 +13,7 @@
     location.reload();
   });
 
-  navigator.serviceWorker.register('./sw.js?v=20260904-6').then(function (registration) {
+  navigator.serviceWorker.register('./sw.js?v=20260905-1').then(function (registration) {
     return registration.update();
   }).catch(function (error) {
     console.warn('离线缓存初始化失败：', error);

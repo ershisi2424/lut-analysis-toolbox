@@ -182,7 +182,7 @@
             margin: 40px 0 0;
         }
     </style>
-    <link rel="stylesheet" href="css/desktop-shell.css?v=20260904-1">
+    <link rel="stylesheet" href="css/desktop-shell.css?v=20260905-1">
 </head>
 <body class="desktop-app desktop-checker">
     <div class="wrapper">
@@ -207,10 +207,10 @@
 
                             <div id="lutviz" class="lutviz-card" role="region" aria-label="LUT 可视化工具">
                                 <div class="drop-zone" id="drop-zone" role="button" tabindex="0" data-file-trigger="lutviz-file" aria-label="导入 LUT 文件">
-                                    <input type="file" id="lutviz-file" accept=".cube,.png" class="drop-zone-input" aria-label="选择 LUT 文件">
+                                    <input type="file" id="lutviz-file" accept=".cube" class="drop-zone-input" aria-label="选择 LUT 文件">
                                     <div class="drop-zone-content">
                                         <span class="import-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 18v2h14v-2"/></svg></span>
-                                        <span class="import-copy"><span class="drop-zone-text">导入 LUT 文件</span><span class="drop-zone-hint">支持 .cube 与 Hald PNG，或拖放到这里</span></span>
+                                        <span class="import-copy"><span class="drop-zone-text">导入 LUT 文件</span><span class="drop-zone-hint">支持 .cube，或拖放到这里</span></span>
                                         <span class="import-shortcut">Ctrl O</span>
                                     </div>
                                 </div>
@@ -223,8 +223,10 @@
                                 </div>
 
                                 <canvas id="lutviz-canvas" class="lutviz-canvas" aria-label="LUT 波形图" width="1226" height="473"></canvas>
+                                <p id="curve-summary" class="chart-summary" aria-live="polite">导入 LUT 后显示各色系亮度变化总结。</p>
 
                                 <canvas id="granger-canvas" aria-label="Granger 彩虹测试图像（点击或拖动分割线查看对比）" width="1224" height="612"></canvas>
+                                <p id="granger-summary" class="chart-summary" aria-live="polite">导入 LUT 后显示基础色系范围检查。</p>
                             </div>
 
                             <div id="lut-analysis" class="lut-analysis-card" role="region" aria-label="滤镜分析结果">
@@ -352,16 +354,19 @@
                                     <span class="hue-stat">最大偏移: <span id="hue-max-shift">-</span>°</span>
                                     <span class="hue-stat">平均偏移: <span id="hue-avg-shift">-</span>°</span>
                                 </div>
+                                <p id="hue-summary" class="chart-summary" aria-live="polite">导入 LUT 后显示各色系色相偏移总结。</p>
                             </div>
 
                             <div id="saturation-heatmap" class="analysis-card" role="region" aria-label="饱和度热力图">
                                 <h2 class="analysis-title">饱和度比率热力图</h2>
                                 <canvas id="heatmap-canvas" class="analysis-canvas" width="720" height="200"></canvas>
+                                <p id="saturation-summary" class="chart-summary" aria-live="polite">导入 LUT 后显示各色系饱和度变化总结。</p>
                             </div>
 
                             <div id="vectorscope" class="analysis-card" role="region" aria-label="矢量示波器">
                                 <h2 class="analysis-title">饱和度响应</h2>
                                 <canvas id="vectorscope-canvas" class="analysis-canvas" width="400" height="400"></canvas>
+                                <p id="vectorscope-summary" class="chart-summary" aria-live="polite">导入 LUT 后显示色系扩张与收缩总结。</p>
                             </div>
 
                             <div style="height:60px" aria-hidden="true" class="wp-block-spacer"></div>
@@ -407,7 +412,8 @@
     <div class="copyright-footer">LUT分析工具箱 参考网页https://mononodes.com/lut-inspector/</div>
 
     <script src="js/desktop-ui.js?v=20260904-1"></script>
-    <script src="js/sw-register.js?v=20260904-6"></script>
+    <script src="js/workspace-features.js?v=20260905-1"></script>
+    <script src="js/sw-register.js?v=20260905-1"></script>
     <script src="js/auth.js?v=20260904-5"></script>
 </body>
 </html>

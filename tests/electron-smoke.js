@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 const { app, BrowserWindow } = require('electron');
 const { isAllowedLocalPage } = require('../electron/navigation');
@@ -80,8 +81,15 @@ async function run() {
   assert.equal(await window.webContents.executeJavaScript(`document.querySelector('h1').textContent.trim()`), 'LUT 检查器');
   await setFileInput(window, 'lutviz-file', 'identity.cube', 'text/plain', JSON.stringify(identityCube));
   await waitFor(window, `document.getElementById('lut-info-size').textContent === '2x2x2'`);
+  await waitFor(window, `document.querySelector('#drop-zone .drop-zone-text').textContent === 'identity.cube'`);
+  await waitFor(window, `document.querySelectorAll('.chart-summary.ready').length === 5`);
   assert.equal(await window.webContents.executeJavaScript(`document.getElementById('lut-contrast').textContent`), '0.00%');
   assert.equal(await window.webContents.executeJavaScript(`document.getElementById('lut-dynamic-range').textContent`), '100.0%');
+  assert.match(await window.webContents.executeJavaScript(`document.getElementById('curve-summary').textContent`), /0\.0%/);
+  await window.webContents.executeJavaScript(`document.querySelector('.history-toggle').click()`);
+  await waitFor(window, `[...document.querySelectorAll('.history-file-copy strong')].some(node => node.textContent === 'identity.cube')`);
+  assert.equal(await window.webContents.executeJavaScript(`document.getElementById('history-drawer').classList.contains('open')`), true);
+  await window.webContents.executeJavaScript(`document.querySelector('.history-close').click()`);
   const canvasSizes = await window.webContents.executeJavaScript(`
     ['granger-canvas','hue-canvas','heatmap-canvas','vectorscope-canvas'].map(id => {
       const rect = document.getElementById(id).getBoundingClientRect();
@@ -89,6 +97,11 @@ async function run() {
     })
   `);
   assert.ok(canvasSizes.every(([, width, height]) => width > 0 && height > 0 && width <= 902 && height <= 452), JSON.stringify(canvasSizes));
+  if (process.env.LUT_UI_CAPTURE_CHECKER) {
+    await window.webContents.executeJavaScript(`document.getElementById('curve-summary').scrollIntoView({ block: 'center' })`);
+    const screenshot = await window.webContents.capturePage();
+    fs.writeFileSync(process.env.LUT_UI_CAPTURE_CHECKER, screenshot.toPNG());
+  }
 
   await window.webContents.executeJavaScript(`document.querySelector('a[href="index2.html"]').click()`);
   await waitFor(window, `location.pathname.endsWith('/index2.html')`);
@@ -112,8 +125,29 @@ async function run() {
   assert.notEqual(analyzerImport.display, 'none');
   assert.equal(analyzerImport.trigger, 'lutfile');
   assert.match(analyzerImport.label, /导入 3D LUT/);
-  await setFileInput(window, 'lutfile', 'identity.cube', 'text/plain', JSON.stringify(identityCube));
+  await window.webContents.executeJavaScript(`document.querySelector('.history-toggle').click()`);
+  await waitFor(window, `[...document.querySelectorAll('.history-item')].some(item => item.querySelector('strong').textContent === 'identity.cube')`);
+  await window.webContents.executeJavaScript(`
+    [...document.querySelectorAll('.history-item')]
+      .find(item => item.querySelector('strong').textContent === 'identity.cube')
+      .querySelector('.history-open').click()
+  `);
   await waitFor(window, `document.getElementById('analysis-size').textContent === '2x2x2'`);
+  await waitFor(window, `document.querySelectorAll('#family-summary-table .family-row').length === 6`);
+  assert.equal(await window.webContents.executeJavaScript(`document.querySelector('#drop-zone .drop-zone-text').textContent`), 'identity.cube');
+  if (process.env.LUT_UI_CAPTURE_ANALYZER) {
+    const panelScroll = await window.webContents.executeJavaScript(`
+      (() => {
+        const panel = document.querySelector('.controls');
+        panel.scrollTop = panel.scrollHeight;
+        return { top: panel.scrollTop, max: panel.scrollHeight - panel.clientHeight };
+      })()
+    `);
+    assert.ok(panelScroll.max > 0 && panelScroll.top > 0, JSON.stringify(panelScroll));
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const screenshot = await window.webContents.capturePage();
+    fs.writeFileSync(process.env.LUT_UI_CAPTURE_ANALYZER, screenshot.toPNG());
+  }
   assert.equal(await window.webContents.executeJavaScript(`document.getElementById('analysis-range').textContent`), '100.0%');
   await window.webContents.executeJavaScript(`document.getElementById('iretoggle').click()`);
   await waitFor(window, `document.getElementById('ireOverlay').classList.contains('show')`);
@@ -135,6 +169,14 @@ async function run() {
   await waitFor(window, `location.pathname.endsWith('/index3.html')`);
   await setFileInput(window, 'lut-file-input', 'identity.cube', 'text/plain', JSON.stringify(identityCube));
   await waitFor(window, `document.getElementById('lut-count').textContent.includes('1')`);
+  await waitFor(window, `document.querySelector('#drop-zone .drop-zone-text').textContent === 'identity.cube'`);
+  await window.webContents.executeJavaScript(`document.querySelector('.history-toggle').click()`);
+  await waitFor(window, `[...document.querySelectorAll('.history-file-copy strong')].some(node => node.textContent === 'identity.cube')`);
+  const identityHistoryCount = await window.webContents.executeJavaScript(`
+    [...document.querySelectorAll('.history-file-copy strong')].filter(node => node.textContent === 'identity.cube').length
+  `);
+  assert.equal(identityHistoryCount, 1);
+  await window.webContents.executeJavaScript(`document.querySelector('.history-close').click()`);
   await window.webContents.executeJavaScript(`
     new Promise(resolve => {
       const canvas = document.createElement('canvas'); canvas.width = 320; canvas.height = 180;
@@ -152,6 +194,19 @@ async function run() {
   await waitFor(window, `document.getElementById('preview-canvas').width > 0`);
   const preview = await window.webContents.executeJavaScript(`({ width: document.getElementById('preview-canvas').width, height: document.getElementById('preview-canvas').height })`);
   assert.equal(preview.width / preview.height, 16 / 9);
+  const previewLayout = await window.webContents.executeJavaScript(`
+    (() => {
+      const controls = document.querySelector('.convert-section').getBoundingClientRect();
+      const viewer = document.querySelector('.preview-section').getBoundingClientRect();
+      return { controlsLeft: controls.left, viewerLeft: viewer.left, topDelta: Math.abs(controls.top - viewer.top), overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+    })()
+  `);
+  assert.ok(previewLayout.viewerLeft > previewLayout.controlsLeft && previewLayout.topDelta < 20, JSON.stringify(previewLayout));
+  assert.equal(previewLayout.overflow, 0, JSON.stringify(previewLayout));
+  if (process.env.LUT_UI_CAPTURE) {
+    const screenshot = await window.webContents.capturePage();
+    fs.writeFileSync(process.env.LUT_UI_CAPTURE, screenshot.toPNG());
+  }
 
   window.destroy();
   assert.deepEqual(consoleErrors, []);

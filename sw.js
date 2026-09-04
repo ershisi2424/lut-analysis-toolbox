@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'lut-analysis-toolbox-v3';
+const CACHE_NAME = 'lut-analysis-toolbox-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -16,6 +16,7 @@ const STATIC_ASSETS = [
   './css/desktop-shell.css',
   './js/auth.js',
   './js/desktop-ui.js',
+  './js/workspace-features.js',
   './js/sw-register.js',
   './js/utils.min.js',
   './js/lut-utils.js',

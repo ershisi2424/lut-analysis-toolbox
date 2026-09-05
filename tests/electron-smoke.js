@@ -198,7 +198,12 @@ async function run() {
     (() => {
       const controls = document.querySelector('.convert-section').getBoundingClientRect();
       const viewer = document.querySelector('.preview-section').getBoundingClientRect();
-      const clientWidth = document.documentElement.clientWidth;
+      // On Windows runners with display scaling, documentElement.clientWidth can
+      // be reported in scale-adjusted units while DOMRects and fixed positioning
+      // use the layout viewport. window.innerWidth shares the DOMRect coordinate
+      // space, so it is the correct boundary for visual overflow checks.
+      const viewportWidth = window.innerWidth;
+      const documentClientWidth = document.documentElement.clientWidth;
       const overflowElements = [...document.querySelectorAll('body *')]
         .map(element => {
           const rect = element.getBoundingClientRect();
@@ -209,15 +214,16 @@ async function run() {
             width: Math.round(rect.width)
           };
         })
-        .filter(item => item.right > clientWidth + 1 || item.left < -1)
+        .filter(item => item.right > viewportWidth + 1 || item.left < -1)
         .sort((a, b) => b.right - a.right)
         .slice(0, 8);
       return {
         controlsLeft: controls.left,
         viewerLeft: viewer.left,
         topDelta: Math.abs(controls.top - viewer.top),
-        overflow: document.documentElement.scrollWidth - clientWidth,
-        clientWidth,
+        overflow: Math.max(0, document.documentElement.scrollWidth - viewportWidth),
+        viewportWidth,
+        documentClientWidth,
         overflowElements
       };
     })()

@@ -63,7 +63,7 @@ async function run() {
   await app.whenReady();
   const window = new BrowserWindow({
     show: false,
-    width: 1280,
+    width: Number(process.env.LUT_TEST_WIDTH || 1280),
     height: 900,
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true }
   });
@@ -235,6 +235,9 @@ async function run() {
     fs.writeFileSync(process.env.LUT_UI_CAPTURE, screenshot.toPNG());
   }
 
+  // Let pending canvas compositing finish before tearing down Chromium's GPU
+  // resources. Immediate destruction can produce false shared-image errors.
+  await new Promise(resolve => setTimeout(resolve, 250));
   window.destroy();
   assert.deepEqual(consoleErrors, []);
   console.log('electron smoke tests passed');

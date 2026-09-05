@@ -737,9 +737,8 @@ body.desktop-analyzer #content {
 body.desktop-analyzer #cube {
   top: 60px;
   height: calc(100vh - 60px);
-  background:
-    radial-gradient(circle at 63% 42%, rgba(80, 101, 167, 0.08), transparent 34%),
-    #07090d;
+  background-color: var(--analyzer-workspace-bg, rgb(38, 38, 38));
+  background-image: none;
 }
 
 body.desktop-analyzer .cube-vignette {
@@ -874,16 +873,85 @@ body.desktop-analyzer .controls input[type="checkbox"] {
 }
 
 body.desktop-analyzer .corner-btn {
+  position: relative;
+  min-width: 0;
+  height: 28px;
+  padding: 0;
   color: #aeb8c8;
+  font: 700 10px/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
   background: #10151e;
   border-color: #2a3240;
   border-radius: 7px;
 }
 
+body.desktop-analyzer .corner-buttons-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  width: min(100%, 154px);
+  min-width: 0;
+  margin: 0 auto;
+  gap: 5px;
+}
+
+body.desktop-analyzer .corner-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(36px, 1fr));
+  gap: 6px;
+  width: 100%;
+}
+
+body.desktop-analyzer .controls .row.corner-row {
+  min-height: 112px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  align-items: center;
+}
+
+body.desktop-analyzer .corner-row > .slabel {
+  align-self: center;
+}
+
+body.desktop-analyzer .corner-btn::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  bottom: 3px;
+  left: 6px;
+  height: 2px;
+  border-radius: 99px;
+  background: var(--corner-color, #8993a4);
+  opacity: 0.72;
+}
+
+body.desktop-analyzer .corner-red { --corner-color: #ff565f; }
+body.desktop-analyzer .corner-green { --corner-color: #4ee38a; }
+body.desktop-analyzer .corner-blue { --corner-color: #5d8dff; }
+body.desktop-analyzer .corner-cyan { --corner-color: #43dbea; }
+body.desktop-analyzer .corner-magenta { --corner-color: #dd72ff; }
+body.desktop-analyzer .corner-yellow { --corner-color: #f1dc59; }
+
 body.desktop-analyzer .corner-btn.active {
   color: #11151c;
-  background: #dce5ff;
-  border-color: #dce5ff;
+  background: var(--corner-color, #dce5ff);
+  border-color: var(--corner-color, #dce5ff);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--corner-color, #dce5ff) 28%, transparent);
+}
+
+body.desktop-analyzer .corner-btn.active::after {
+  background: rgba(10, 13, 18, 0.62);
+}
+
+body.desktop-analyzer .corner-state {
+  display: block;
+  min-height: 12px;
+  width: 100%;
+  margin-top: 1px;
+  color: #758196;
+  font-size: 9px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-align: center;
 }
 
 body.desktop-analyzer .analysis-summary {
@@ -960,9 +1028,16 @@ body.desktop-previewer .preview-main {
 }
 
 body.desktop-previewer .convert-section {
+  position: sticky;
+  top: 76px;
   grid-column: 1;
   grid-row: 1;
+  align-self: start;
+  max-height: calc(100vh - 152px);
   min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 body.desktop-previewer .preview-section {
@@ -1008,6 +1083,28 @@ body.desktop-previewer .control-select,
 body.desktop-previewer input[type="range"],
 body.desktop-previewer button {
   border-radius: 8px;
+}
+
+body.desktop-previewer .control-select {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+body.desktop-previewer .convert-controls .control-label,
+body.desktop-previewer .png-settings .control-label {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: 7px;
+  width: 100%;
+}
+
+body.desktop-previewer .png-settings .convert-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 body.desktop-previewer .lutviz-btn,
@@ -1071,6 +1168,8 @@ body.desktop-previewer .export-btn {
   body.desktop-previewer .convert-section,
   body.desktop-previewer .preview-section {
     position: static;
+    max-height: none;
+    overflow: visible;
     grid-column: 1;
   }
 

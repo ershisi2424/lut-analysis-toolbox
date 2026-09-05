@@ -31,6 +31,20 @@ jobs:
         run: npm run test:electron
       - name: Build portable executable
         run: npm run dist:win
+      - name: Validate portable executable
+        shell: pwsh
+        run: |
+          $executables = @(Get-ChildItem dist -Filter *.exe)
+          if ($executables.Count -ne 1) { throw "Expected exactly one portable EXE, found $($executables.Count)" }
+          if ($executables[0].Length -lt 10MB) { throw "Portable EXE is unexpectedly small: $($executables[0].Length) bytes" }
+          $stream = [System.IO.File]::OpenRead($executables[0].FullName)
+          try {
+            $first = $stream.ReadByte()
+            $second = $stream.ReadByte()
+          } finally {
+            $stream.Dispose()
+          }
+          if ($first -ne 0x4d -or $second -ne 0x5a) { throw "Portable asset is not a valid PE executable" }
       - name: Generate SHA-256 checksums
         shell: pwsh
         run: |
@@ -54,4 +68,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" dist/*.exe dist/SHA256SUMS.txt --verify-tag --title "LUT分析工具箱 ${{ github.ref_name }}" --notes "Windows x64 便携版。无需安装；下载 EXE 后直接运行。包含 LUT 解析、检查、3D 分析、预览、重采样及导出功能。"
+          gh release create "${{ github.ref_name }}" dist/*.exe dist/SHA256SUMS.txt --verify-tag --title "LUT分析工具箱 ${{ github.ref_name }}" --notes-file RELEASE_NOTES.md

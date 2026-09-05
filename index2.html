@@ -203,7 +203,7 @@
             margin: 40px 0 0;
         }
     </style>
-    <link rel="stylesheet" href="css/desktop-shell.css?v=20260905-3">
+    <link rel="stylesheet" href="css/desktop-shell.css?v=20260905-4">
 </head>
 <body class="desktop-app desktop-analyzer">
     <div class="wrapper">
@@ -249,7 +249,7 @@
                 </div>
                 <div class="row">
                     <label class="slabel" for="bg">背景</label>
-                    <input id="bg" type="range" min="0" max="1" step="0.01" value="0" aria-label="背景颜色 黑 ↔ 白">
+                    <input id="bg" type="range" min="0" max="1" step="0.01" value="0.30" aria-label="背景从黑色到百分之五十灰，默认百分之十五灰">
                 </div>
                 <div class="row">
                     <label class="slabel" for="autorotate">自动旋转</label>
@@ -267,19 +267,20 @@
                     <label class="slabel" for="iretoggle">显示 IRE 图表</label>
                     <input id="iretoggle" type="checkbox" aria-label="叠加 IRE 图表">
                 </div>
-                <div class="row">
+                <div class="row corner-row">
                     <span class="slabel">角点</span>
                     <div class="corner-buttons-wrap">
-                        <div class="corner-buttons">
-                            <button type="button" class="corner-btn" data-corner="red" aria-label="显示红色角点">红色</button>
-                            <button type="button" class="corner-btn" data-corner="green" aria-label="显示绿色角点">绿色</button>
-                            <button type="button" class="corner-btn" data-corner="blue" aria-label="显示蓝色角点">蓝色</button>
+                        <div class="corner-buttons corner-primary" role="group" aria-label="RGB 原色域筛选">
+                            <button type="button" class="corner-btn corner-red" data-corner="red" title="红色域" aria-label="显示红色域">R</button>
+                            <button type="button" class="corner-btn corner-green" data-corner="green" title="绿色域" aria-label="显示绿色域">G</button>
+                            <button type="button" class="corner-btn corner-blue" data-corner="blue" title="蓝色域" aria-label="显示蓝色域">B</button>
                         </div>
-                        <div class="corner-buttons">
-                            <button type="button" class="corner-btn" data-corner="cyan" aria-label="显示青色角点">青色</button>
-                            <button type="button" class="corner-btn" data-corner="magenta" aria-label="显示品红角点">品红</button>
-                            <button type="button" class="corner-btn" data-corner="yellow" aria-label="显示黄色角点">黄色</button>
+                        <div class="corner-buttons corner-complementary" role="group" aria-label="CMY 互补色域筛选">
+                            <button type="button" class="corner-btn corner-cyan" data-corner="cyan" title="青色域" aria-label="显示青色域">C</button>
+                            <button type="button" class="corner-btn corner-magenta" data-corner="magenta" title="品红域" aria-label="显示品红域">M</button>
+                            <button type="button" class="corner-btn corner-yellow" data-corner="yellow" title="黄色域" aria-label="显示黄色域">Y</button>
                         </div>
+                        <small id="corner-state" class="corner-state" aria-live="polite">全部色域</small>
                     </div>
                 </div>
 
@@ -338,9 +339,9 @@
         </main>
     </div>
 
-    <script src="js/lut-utils.js?v=20260904-4"></script>
+    <script src="js/lut-utils.js?v=20260905-5"></script>
     <script src="js/utils.min.js?v=20260805"></script>
-    <script src="js/lutanayzer.min.js?v=20260904-4"></script>
+    <script src="js/lutanalyzer.js?v=20260905-6"></script>
     <script src="js/bug-detect.min.js?v=20260806"></script>
 
     <div class="copyright-watermark">LUT分析工具箱</div>
@@ -367,6 +368,10 @@
                 const step = parseFloat(input.step) || 1;
                 const max = parseFloat(input.max);
                 const min = parseFloat(input.min);
+                // 对标 LUT Cube Analyzer：背景滑块 0~1 映射到 RGB 0~128。
+                if (input.id === 'bg') {
+                    return Math.round(v * 50) + '% 灰';
+                }
                 // 0~1 范围且步进 <= 0.01 → 百分比显示
                 if (max <= 1 && min >= 0 && step <= 0.01) {
                     return Math.round(v * 100) + '%';
@@ -394,6 +399,14 @@
             function sync(input, span) {
                 span.textContent = formatValue(input);
             }
+
+            function syncRangeBadge(input) {
+                if (!input) return;
+                var span = input.parentElement && input.parentElement.querySelector('.range-value[data-for="' + (input.id || '') + '"]');
+                if (span) sync(input, span);
+            }
+
+            window.syncRangeBadge = syncRangeBadge;
 
             function init() {
                 document.querySelectorAll('input[type="range"]').forEach(function(input) {

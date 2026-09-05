@@ -1,6 +1,6 @@
 {
   "name": "lut-analysis-toolbox",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "LUT分析工具箱 - 本地 3D LUT 检查、分析、预览与转换工具",
   "main": "electron/main.js",
   "author": "ershisi2424",
@@ -13,7 +13,7 @@
     "start": "electron .",
     "test": "node tests/lut-utils.test.js && node tests/workspace-features.test.js && node tests/project-integrity.test.js",
     "test:electron": "electron tests/electron-smoke.js",
-    "check": "node --check electron/main.js && node --check electron/navigation.js && node --check js/lut-utils.js && node --check js/auth.js && node --check js/desktop-ui.js && node --check js/workspace-features.js && node --check sw.js",
+    "check": "node --check electron/main.js && node --check electron/navigation.js && node --check js/lut-utils.js && node --check js/lutviz.min.js && node --check js/lutanalyzer.js && node --check js/lutpreviewer.min.js && node --check js/auth.js && node --check js/desktop-ui.js && node --check js/workspace-features.js && node --check sw.js",
     "dist:win": "electron-builder --win portable --x64"
   },
   "devDependencies": {

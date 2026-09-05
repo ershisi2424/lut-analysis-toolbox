@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'lut-analysis-toolbox-v4';
+const CACHE_NAME = 'lut-analysis-toolbox-v13';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -22,7 +22,7 @@ const STATIC_ASSETS = [
   './js/lut-utils.js',
   './js/lutviz.min.js',
   './js/granger.min.js',
-  './js/lutanayzer.min.js',
+  './js/lutanalyzer.js',
   './js/lutpreviewer.min.js',
   './js/bug-detect.min.js',
   './assets/fonts/bebasneue-v14-regular.woff2',

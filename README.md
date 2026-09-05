@@ -2,7 +2,7 @@
 
 一个离线运行的 3D LUT 检查、分析、预览与转换工具。项目同时支持浏览器本地运行和 Windows x64 便携 EXE。
 
-当前版本：`1.2.0`
+当前版本：`1.3.0`
 访问密码：`1820900463`
 
 ## 功能
@@ -17,7 +17,7 @@
 
 ## Windows 便携版
 
-在 GitHub Releases 下载 `LUT-Analysis-Toolbox-1.2.0-portable.exe`，双击即可运行，无需安装 Node.js。
+在 GitHub Releases 下载 `LUT-Analysis-Toolbox-1.3.0-portable.exe`，双击即可运行，无需安装 Node.js。
 
 Windows 便携版由 GitHub Actions 在 `windows-latest` x64 环境中重新测试和构建。每个 Release 同时提供 `SHA256SUMS.txt`，可用于验证文件完整性。
 
@@ -48,7 +48,7 @@ npm run check
 npm run dist:win
 ```
 
-端到端测试会实际验证：错误密码被拒绝、正确密码登录、三个页面加载 3D LUT、分析数值、IRE 高 DPI 画布、结果图尺寸以及自定义 16:9 图片预览。
+端到端测试会实际验证：错误密码被拒绝、正确密码登录、三个页面加载 3D LUT、分析数值、IRE 高 DPI 画布、结果图尺寸、转换参数同步、原始像素尺寸预览、像素颜色一致性以及宽窄窗口布局。
 
 基础色系总结使用红、黄、绿、青、蓝、品红六组 RGB 代码值样本，展示相对亮度、HSV 饱和度和色相变化。它不代表经过显示器校准后的实际亮度或专业色彩管理结论。
 

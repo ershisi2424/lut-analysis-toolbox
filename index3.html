@@ -212,7 +212,7 @@
             margin: 40px 0 0;
         }
     </style>
-    <link rel="stylesheet" href="css/desktop-shell.css?v=20260905-3">
+    <link rel="stylesheet" href="css/desktop-shell.css?v=20260905-4">
 </head>
 <body class="desktop-app desktop-previewer">
     <div class="wrapper">
@@ -297,7 +297,7 @@
                                             <div class="preview-canvas-wrap">
                                                 <canvas id="preview-canvas" class="preview-canvas" aria-label="LUT 效果预览图"></canvas>
                                             </div>
-                                            <div class="preview-hint">拖动分割线对比原图与 LUT 效果</div>
+                                            <div class="preview-hint">拖动分割线对比原图与 LUT 效果 · 自定义图片按原始像素 1:1 处理</div>
                                         </div>
 
                                         <!-- 转换面板 -->
@@ -389,6 +389,7 @@
                                                             <option value="8" selected>Level 8 · 512×512 · 64³ = 262,144</option>
                                                         </select>
                                                     </label>
+                                                    <div class="slider-hint">标准 ImageMagick Hald 排列 · PNG 为 8 位 RGB，超出 0–1 的值会裁切；需要保留扩展范围请导出 CUBE</div>
                                                 </div>
                                             </div>
 
@@ -412,9 +413,9 @@
         </main>
     </div>
 
-    <script src="js/lut-utils.js?v=20260904-4"></script>
+    <script src="js/lut-utils.js?v=20260905-5"></script>
     <script src="js/utils.min.js?v=20260806"></script>
-    <script src="js/lutpreviewer.min.js?v=20260904-4"></script>
+    <script src="js/lutpreviewer.min.js?v=20260905-5"></script>
     <script src="js/bug-detect.min.js?v=20260806"></script>
 
     <div class="copyright-watermark">LUT分析工具箱</div>

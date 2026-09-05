@@ -116,10 +116,14 @@
       if (entryCount >= expectedEntries) {
         throw new Error(`Too many LUT entries; expected ${expectedEntries}`);
       }
+      const values = parts.map(Number);
+      if (!values.every(value => Number.isFinite(Math.fround(value)))) {
+        throw new Error('LUT value exceeds Float32 range');
+      }
       const offset = entryCount * 3;
-      data[offset] = Number(parts[0]);
-      data[offset + 1] = Number(parts[1]);
-      data[offset + 2] = Number(parts[2]);
+      data[offset] = values[0];
+      data[offset + 1] = values[1];
+      data[offset + 2] = values[2];
       entryCount += 1;
     }
 
@@ -238,15 +242,25 @@
   }
 
   function buildDiagonalCurves(lutObject) {
-    const { size, lut } = lutObject;
-    const red = new Float32Array(size), green = new Float32Array(size);
-    const blue = new Float32Array(size), y = new Float32Array(size);
-    for (let index = 0; index < size; index += 1) {
-      const offset = latticeIndex(index, index, index, size);
-      red[index] = lut[offset]; green[index] = lut[offset + 1]; blue[index] = lut[offset + 2];
+    // Keep graph resolution independent from the LUT lattice. 65 samples are
+    // enough for a smooth curve while still including every diagonal node of
+    // the supported 17/33/65 cube sizes.
+    const sampleCount = 65;
+    const red = new Float32Array(sampleCount), green = new Float32Array(sampleCount);
+    const blue = new Float32Array(sampleCount), y = new Float32Array(sampleCount);
+    for (let index = 0; index < sampleCount; index += 1) {
+      const normalized = index / (sampleCount - 1);
+      const output = tetraInterp(
+        domainValue(lutObject, 0, normalized),
+        domainValue(lutObject, 1, normalized),
+        domainValue(lutObject, 2, normalized),
+        lutObject.lut,
+        lutObject.size
+      );
+      red[index] = output[0]; green[index] = output[1]; blue[index] = output[2];
       y[index] = 0.2126 * red[index] + 0.7152 * green[index] + 0.0722 * blue[index];
     }
-    return { r: red, g: green, b: blue, y, maxI: size - 1 };
+    return { r: red, g: green, b: blue, y, maxI: sampleCount - 1 };
   }
 
   function applyLUTToImageData(imageData, lut, size) {
@@ -301,8 +315,12 @@
     return mapLUT(lutObject, (input, output) => {
       const inputY = 0.2126 * input[0] + 0.7152 * input[1] + 0.0722 * input[2];
       const outputY = 0.2126 * output[0] + 0.7152 * output[1] + 0.0722 * output[2];
-      if (Math.abs(outputY) < 1e-9) return output;
-      const corrected = output.map(value => value * inputY / outputY);
+      // Rec.709 luma coefficients sum to one, so adding the same luma delta
+      // to all channels preserves the LUT's RGB opponent differences while
+      // replacing only its luma. Unlike ratio scaling, this has no black-level
+      // singularity and does not unintentionally scale chroma.
+      const lumaDelta = inputY - outputY;
+      const corrected = output.map(value => value + lumaDelta);
       return output.map((value, channel) => value + (corrected[channel] - value) * amount);
     });
   }
@@ -389,13 +407,16 @@
     }
     deltas.sort((a, b) => a - b);
     let bandingRisk = 0;
-    const step = 1 / (original.size - 1);
     for (let b = 0; b < original.size; b += 1) for (let g = 0; g < original.size; g += 1) for (let r = 0; r < original.size; r += 1) {
       for (const [dr, dg, db] of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) {
         if (r + dr >= original.size || g + dg >= original.size || b + db >= original.size) continue;
         const a = latticeIndex(r, g, b, original.size), next = latticeIndex(r + dr, g + dg, b + db, original.size);
-        const distance = Math.hypot(converted.lut[next] - converted.lut[a], converted.lut[next + 1] - converted.lut[a + 1], converted.lut[next + 2] - converted.lut[a + 2]);
-        bandingRisk = Math.max(bandingRisk, Math.abs(distance - step) / step);
+        const convertedDistance = Math.hypot(converted.lut[next] - converted.lut[a], converted.lut[next + 1] - converted.lut[a + 1], converted.lut[next + 2] - converted.lut[a + 2]);
+        const originalDistance = Math.hypot(original.lut[next] - original.lut[a], original.lut[next + 1] - original.lut[a + 1], original.lut[next + 2] - original.lut[a + 2]);
+        const relativeChange = originalDistance > 1e-12
+          ? Math.abs(convertedDistance / originalDistance - 1)
+          : convertedDistance > 1e-12 ? 1 : 0;
+        bandingRisk = Math.max(bandingRisk, relativeChange);
       }
     }
     let neutralError = 0;
@@ -405,7 +426,9 @@
       neutralError = Math.max(neutralError, Math.abs(converted.lut[offset] - mean), Math.abs(converted.lut[offset + 1] - mean), Math.abs(converted.lut[offset + 2] - mean));
     }
     const rmsR = Math.sqrt(sumR / entries), rmsG = Math.sqrt(sumG / entries), rmsB = Math.sqrt(sumB / entries);
-    return { rmsR, rmsG, rmsB, rmsTotal: Math.hypot(rmsR, rmsG, rmsB), maxDelta, avgDelta: sumDelta / entries, medianDelta: deltas[Math.floor(entries / 2)], outOfGamut, outOfGamutPercent: 100 * outOfGamut / entries, bandingRisk, neutralError, entries };
+    const middle = Math.floor(entries / 2);
+    const medianDelta = entries % 2 ? deltas[middle] : (deltas[middle - 1] + deltas[middle]) / 2;
+    return { rmsR, rmsG, rmsB, rmsTotal: Math.hypot(rmsR, rmsG, rmsB), maxDelta, avgDelta: sumDelta / entries, medianDelta, outOfGamut, outOfGamutPercent: 100 * outOfGamut / entries, bandingRisk, neutralError, entries };
   }
 
   function generateHaldCLUTImage(lutObject, level) {
@@ -415,8 +438,13 @@
     const canvas = document.createElement('canvas'); canvas.width = side; canvas.height = side;
     const context = canvas.getContext('2d'), image = context.createImageData(side, side);
     const source = lutObject.size === cubeSize ? lutObject : resampleLUT(lutObject, cubeSize, 'tetrahedral');
+    // ImageMagick Hald ordering is the flattened 3D cube index
+    // R + size*G + size^2*B laid out row-major in the square image.
     for (let y = 0; y < side; y += 1) for (let x = 0; x < side; x += 1) {
-      const red = x % cubeSize, green = y % cubeSize, blue = Math.floor(y / cubeSize) * level + Math.floor(x / cubeSize);
+      const pixelIndex = y * side + x;
+      const red = pixelIndex % cubeSize;
+      const green = Math.floor(pixelIndex / cubeSize) % cubeSize;
+      const blue = Math.floor(pixelIndex / (cubeSize * cubeSize));
       const sourceOffset = latticeIndex(red, green, blue, cubeSize), targetOffset = 4 * (y * side + x);
       image.data[targetOffset] = Math.round(255 * clamp01(source.lut[sourceOffset]));
       image.data[targetOffset + 1] = Math.round(255 * clamp01(source.lut[sourceOffset + 1]));
@@ -429,9 +457,14 @@
     if (imageData.width !== imageData.height) throw new Error('HaldCLUT 图片必须为正方形');
     const side = imageData.width, level = Math.round(Math.cbrt(side));
     if (level ** 3 !== side) throw new Error(`无效的 HaldCLUT 尺寸: ${side}（需为 level³）`);
+    if (level < 2 || level > 8) throw new Error('HaldCLUT level 必须为 2..8');
+    if (!imageData.data || imageData.data.length !== side * side * 4) throw new Error('HaldCLUT 像素数据长度无效');
     const size = level * level, lut = new Float32Array(size ** 3 * 3);
     for (let y = 0; y < side; y += 1) for (let x = 0; x < side; x += 1) {
-      const red = x % size, green = y % size, blue = Math.floor(y / size) * level + Math.floor(x / size);
+      const pixelIndex = y * side + x;
+      const red = pixelIndex % size;
+      const green = Math.floor(pixelIndex / size) % size;
+      const blue = Math.floor(pixelIndex / (size * size));
       const target = latticeIndex(red, green, blue, size), source = 4 * (y * side + x);
       lut[target] = imageData.data[source] / 255; lut[target + 1] = imageData.data[source + 1] / 255; lut[target + 2] = imageData.data[source + 2] / 255;
     }
@@ -452,7 +485,15 @@
       const inputChroma = Math.max(inR, inG, inB) - Math.min(inR, inG, inB), outputChroma = Math.max(outR, outG, outB) - Math.min(outR, outG, outB);
       saturation += Math.abs(outputChroma - inputChroma); if (outputChroma > inputChroma + 1e-9) satBoost += 1; else if (outputChroma < inputChroma - 1e-9) satReduce += 1;
     }
-    const diagonal = buildDiagonalCurves(lutObject), yPeak = Math.max(...diagonal.y), yMin = Math.min(...diagonal.y);
+    // Preserve the original analysis definition: extrema come from the LUT's
+    // exact diagonal lattice nodes, not from the 65-point display curve.
+    let yPeak = -Infinity, yMin = Infinity;
+    for (let index = 0; index < size; index += 1) {
+      const offset = latticeIndex(index, index, index, size);
+      const luminance = 0.2126 * lut[offset] + 0.7152 * lut[offset + 1] + 0.0722 * lut[offset + 2];
+      yPeak = Math.max(yPeak, luminance);
+      yMin = Math.min(yMin, luminance);
+    }
     const percent = value => `${(100 * value).toFixed(1)}%`;
     return { size: `${size}x${size}x${size}`, entries: entries.toLocaleString(), fileSize: formatFileSize(fileSize || 0), yPeak: percent(yPeak), yMin: percent(yMin), rPeak: percent(rPeak), gPeak: percent(gPeak), bPeak: percent(bPeak), rMin: percent(rMin), gMin: percent(gMin), bMin: percent(bMin), contrast: `${(100 * contrast / entries).toFixed(2)}%`, maxLuminance: percent(maxLuminance), minLuminance: percent(minLuminance), saturation: `${(100 * saturation / entries).toFixed(2)}%`, satBoost: percent(satBoost / entries), satReduce: percent(satReduce / entries), dynamicRange: percent(maxLuminance - minLuminance) };
   }
@@ -469,10 +510,13 @@
         const mean = (values[0] + values[1] + values[2]) / 3;
         maxCast = Math.max(maxCast, ...values.map(value => Math.abs(value - mean)));
       }
-      for (const [dr, dg, db] of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) {
+      for (const [dr, dg, db, channel] of [[1, 0, 0, 0], [0, 1, 0, 1], [0, 0, 1, 2]]) {
         if (red + dr >= size || green + dg >= size || blue + db >= size) continue;
         const next = latticeIndex(red + dr, green + dg, blue + db, size);
-        maxStepRatio = Math.max(maxStepRatio, Math.hypot(lut[next] - values[0], lut[next + 1] - values[1], lut[next + 2] - values[2]) / (1 / last));
+        const domainMin = lutObject.domainMin || DEFAULT_DOMAIN_MIN;
+        const domainMax = lutObject.domainMax || DEFAULT_DOMAIN_MAX;
+        const inputStep = (domainMax[channel] - domainMin[channel]) / last;
+        maxStepRatio = Math.max(maxStepRatio, Math.hypot(lut[next] - values[0], lut[next + 1] - values[1], lut[next + 2] - values[2]) / inputStep);
       }
     }
     const black = [lut[0], lut[1], lut[2]], whiteOffset = latticeIndex(last, last, last, size), white = [lut[whiteOffset], lut[whiteOffset + 1], lut[whiteOffset + 2]];
